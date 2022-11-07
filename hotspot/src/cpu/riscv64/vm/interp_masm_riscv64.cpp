@@ -306,16 +306,15 @@ void InterpreterMacroAssembler::load_resolved_reference_at_index(
 
 
 void InterpreterMacroAssembler::load_resolved_klass_at_offset(
-                                Register cpool, Register index, Register klass, Register temp) {
-  slli(temp, index, LogBytesPerWord);
-  add(temp, temp, cpool);
-  lhu(temp, Address(temp, sizeof(ConstantPool))); // temp = resolved_klass_index
-  ld(klass, Address(cpool, ConstantPool::resolved_klasses_offset_in_bytes())); // klass = cpool->_resolved_klasses
-  slli(temp, temp, LogBytesPerWord);
-  add(klass, klass, temp);
-  ld(klass, Address(klass, Array<Klass*>::base_offset_in_bytes()));
+                                 Register cpool, Register index, Register temp, Register temp2) {
+  slli(temp2, index, LogBytesPerWord);
+  add(temp, temp2, cpool);
+  ld(temp, Address(temp, sizeof(ConstantPool))); // temp = resolved_klass_index
+  //ld(klass, Address(cpool, ConstantPool::resolved_klasses_offset_in_bytes())); // klass = cpool->_resolved_klasses
+  //slli(temp, temp, LogBytesPerWord);
+  //add(klass, klass, temp);
+ // ld(klass, Address(klass, Array<Klass*>::base_offset_in_bytes()));
 }
-
 // Generate a subtype check: branch to ok_is_subtype if sub_klass is a
 // subtype of super_klass.
 //
