@@ -135,8 +135,8 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void load_resolved_reference_at_index(Register result, Register index, Register tmp = x15);
 
   // Load cpool->resolved_klass_at(index).
-  void load_resolved_klass_at_offset(Register cpool, Register index, Register klass, Register temp);
-
+  //void load_resolved_klass_at_offset(Register cpool, Register index, Register klass, Register temp);
+  void load_resolved_klass_at_offset(Register cpool, Register index, Register temp, Register temp2);
   void pop_ptr(Register r = x10);
   void pop_i(Register r = x10);
   void pop_l(Register r = x10);
