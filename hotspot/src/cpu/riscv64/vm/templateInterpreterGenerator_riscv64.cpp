@@ -760,11 +760,11 @@ void InterpreterGenerator::lock_method() {
     // get receiver (assume this is frequent case)
     __ ld(x10, Address(xlocals, Interpreter::local_offset_in_bytes(0)));
     __ beqz(t0, done);
-    //__ load_mirror(x10, xmethod);
-    __ ld(x10, Address(xmethod, Method::const_offset()));
-    __ ld(x10, Address(x10, ConstMethod::constants_offset()));
-    __ ld(x10, Address(x10,
-                           ConstantPool::pool_holder_offset_in_bytes()));
+    __ load_mirror(x10, xmethod);
+    //__ ld(x10, Address(xmethod, Method::const_offset()));
+    //__ ld(x10, Address(x10, ConstMethod::constants_offset()));
+    //__ ld(x10, Address(x10,
+   //                        ConstantPool::pool_holder_offset_in_bytes()));
     __ ld(x10, Address(x10, mirror_offset));
 
 #ifdef ASSERT

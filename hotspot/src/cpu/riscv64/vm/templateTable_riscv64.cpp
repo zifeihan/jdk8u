@@ -840,12 +840,12 @@ void TemplateTable::iaload()
   // x10: array
   // x11: index
   index_check(x10, x11); // leaves index in x11
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_INT) >> 2);
-  //__ slli(t0, x11, 2);
-  //__ add(t0, t0, x10);
-  //__ access_load_at(T_INT, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
-  __ lea(x11, Address(x10, x11, Address::uxtw(2)));
-  __ lwu(x10, Address(x11, arrayOopDesc::base_offset_in_bytes(T_INT)));
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_INT) >> 2);
+  __ slli(t0, x11, 2);
+  __ add(t0, t0, x10);
+  __ access_load_at(T_INT, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
+  //__ lea(x11, Address(x10, x11, Address::uxtw(2)));
+  //__ lwu(x10, Address(x11, arrayOopDesc::base_offset_in_bytes(T_INT)));
   __ addw(x10, x10, zr); // signed extended
 }
 
@@ -857,9 +857,9 @@ void TemplateTable::laload()
   // x10: array
   // x11: index
   index_check(x10, x11); // leaves index in x11
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_LONG) >> 3);
-  //__ slli(t0, x11, 3);
- // __ add(t0, t0, x10);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_LONG) >> 3);
+  __ slli(t0, x11, 3);
+  __ add(t0, t0, x10);
   //__ access_load_at(T_LONG, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
   __ lea(x11, Address(x10, x11, Address::uxtw(3)));
   __ ld(x10, Address(x11,  arrayOopDesc::base_offset_in_bytes(T_LONG)));
@@ -889,9 +889,9 @@ void TemplateTable::daload()
   // x10: array
   // x11: index
   index_check(x10, x11); // leaves index in x11
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_DOUBLE) >> 3);
-  //__ slli(t0, x11, 3);
- // __ add(t0, t0, x10);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_DOUBLE) >> 3);
+  __ slli(t0, x11, 3);
+  __ add(t0, t0, x10);
   //__ access_load_at(T_DOUBLE, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
   __ lea(x11, Address(x10, x11, Address::uxtw(3)));
   __ flw(f10, Address(x11,  arrayOopDesc::base_offset_in_bytes(T_DOUBLE)));
@@ -905,9 +905,9 @@ void TemplateTable::aaload()
   // x10: array
   // x11: index
   index_check(x10, x11); // leaves index in x11
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_OBJECT) >> LogBytesPerHeapOop);
-  //__ slli(t0, x11, LogBytesPerHeapOop);
-  //__ add(t0, t0, x10);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_OBJECT) >> LogBytesPerHeapOop);
+  __ slli(t0, x11, LogBytesPerHeapOop);
+  __ add(t0, t0, x10);
   /*do_oop_load(_masm,
               Address(t0),
               x10,
@@ -924,9 +924,9 @@ void TemplateTable::baload()
   // x10: array
   // x11: index
   index_check(x10, x11); // leaves index in x11
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_BYTE) >> 0);
-  //__ slli(t0, x11, 0);
- //__ add(t0, t0, x10);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_BYTE) >> 0);
+  __ slli(t0, x11, 0);
+ __ add(t0, t0, x10);
   //__ access_load_at(T_BYTE, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
   __ lea(x11, Address(x10, x11, Address::uxtw(0)));
   __ load_signed_byte(x10, Address(x11,  arrayOopDesc::base_offset_in_bytes(T_BYTE)));
@@ -940,9 +940,9 @@ void TemplateTable::caload()
   // x10: array
   // x11: index
   index_check(x10, x11); // leaves index in x11
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_CHAR) >> 1);
-  //__ slli(t0, x11, 1);
-  //__ add(t0, t0, x10);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_CHAR) >> 1);
+  __ slli(t0, x11, 1);
+  __ add(t0, t0, x10);
   //__ access_load_at(T_CHAR, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
   __ lea(x11, Address(x10, x11, Address::uxtw(1)));
   __ load_unsigned_short(x10, Address(x11,  arrayOopDesc::base_offset_in_bytes(T_CHAR)));
@@ -960,9 +960,9 @@ void TemplateTable::fast_icaload()
   // x10: array
   // x11: index
   index_check(x10, x11); // leaves index in x11, kills t0
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_CHAR) >> 1); // addi, max imm is 2^11
-  //__ slli(t0, x11, 1);
-  //__ add(t0, x10, t0);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_CHAR) >> 1); // addi, max imm is 2^11
+  __ slli(t0, x11, 1);
+  __ add(t0, x10, t0);
   //__ access_load_at(T_CHAR, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
   __ lea(x11, Address(x10, x11, Address::uxtw(1)));
   __ load_unsigned_short(x10, Address(x11,  arrayOopDesc::base_offset_in_bytes(T_CHAR)));
@@ -976,9 +976,9 @@ void TemplateTable::saload()
   // x10: array
   // x11: index
   index_check(x10, x11); // leaves index in x11, kills t0
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_SHORT) >> 1);
-  //__ slli(t0, x11, 1);
-  //__ add(t0, t0, x10);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_SHORT) >> 1);
+  __ slli(t0, x11, 1);
+  __ add(t0, t0, x10);
   //__ access_load_at(T_SHORT, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
   __ lea(x11, Address(x10, x11, Address::uxtw(1)));
   __ load_signed_short(x10, Address(x11,  arrayOopDesc::base_offset_in_bytes(T_SHORT)));
@@ -1209,9 +1209,9 @@ void TemplateTable::iastore() {
   // x11: index
   // x13: array
   index_check(x13, x11); // prefer index in x11
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_INT) >> 2);
-  //__ slli(t0, x11, 2);
-  //__ add(t0, x13, t0);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_INT) >> 2);
+  __ slli(t0, x11, 2);
+  __ add(t0, x13, t0);
   //__ access_store_at(T_INT, IN_HEAP | IS_ARRAY, Address(t0, 0), x10, noreg, noreg);
   __ lea(t0, Address(x13, x11, Address::uxtw(2)));
   __ sw(x10, Address(t0,
@@ -1226,9 +1226,9 @@ void TemplateTable::lastore() {
   // x11: index
   // x13: array
   index_check(x13, x11); // prefer index in x11
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_LONG) >> 3);
-  //__ slli(t0, x11, 3);
-  //__ add(t0, x13, t0);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_LONG) >> 3);
+  __ slli(t0, x11, 3);
+  __ add(t0, x13, t0);
   //__ access_store_at(T_LONG, IN_HEAP | IS_ARRAY, Address(t0, 0), x10, noreg, noreg);
    __ lea(t0, Address(x13, x11, Address::uxtw(3)));
   __ sd(x10, Address(t0,
@@ -1260,9 +1260,9 @@ void TemplateTable::dastore() {
   // x11:  index
   // x13:  array
   index_check(x13, x11); // prefer index in x11
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_DOUBLE) >> 3);
-  //__ slli(t0, x11, 3);
-  //__ add(t0, x13, t0);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_DOUBLE) >> 3);
+  __ slli(t0, x11, 3);
+  __ add(t0, x13, t0);
   //__ access_store_at(T_DOUBLE, IN_HEAP | IS_ARRAY, Address(t0, 0), noreg /* dtos */, noreg, noreg);
   __ lea(t0, Address(x13, x11, Address::uxtw(3)));
   __ fsd(f10, Address(t0,
@@ -1347,9 +1347,9 @@ void TemplateTable::bastore()
   __ andi(x10, x10, 1);  // if it is a T_BOOLEAN array, mask the stored value to 0/1
   __ bind(L_skip);
 
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_BYTE) >> 0);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_BYTE) >> 0);
 
-  //__ add(x11, x13, x11);
+  __ add(x11, x13, x11);
   //__ access_store_at(T_BYTE, IN_HEAP | IS_ARRAY, Address(x11, 0), x10, noreg, noreg);
   __ lea(t0, Address(x13, x11, Address::uxtw(0)));
   __ sb(x10, Address(t0,
@@ -1365,9 +1365,9 @@ void TemplateTable::castore()
   // x11: index
   // x13: array
   index_check(x13, x11); // prefer index in x11
-  //__ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_CHAR) >> 1);
-  //__ slli(t0, x11, 1);
-  //__ add(t0, x13, t0);
+  __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_CHAR) >> 1);
+  __ slli(t0, x11, 1);
+  __ add(t0, x13, t0);
   //__ access_store_at(T_CHAR, IN_HEAP | IS_ARRAY, Address(t0, 0), x10, noreg, noreg);
   __ lea(t0, Address(x13, x11, Address::uxtw(0)));
   __ sh(x10, Address(t0,
@@ -2508,6 +2508,9 @@ void TemplateTable::resolve_cache_and_index(int byte_no,
   Label resolved;
 
   Bytecodes::Code code = bytecode();
+  __ get_cache_and_index_and_bytecode_at_bcp(Rcache, index, temp, byte_no, 1, index_size);
+  __ mv(t0, (int) code);
+  __ beq(temp, t0, resolved);
   /*switch (code) {
   case Bytecodes::_nofast_getfield: code = Bytecodes::_getfield; break;
   case Bytecodes::_nofast_putfield: code = Bytecodes::_putfield; break;

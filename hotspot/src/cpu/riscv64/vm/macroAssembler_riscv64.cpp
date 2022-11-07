@@ -1715,15 +1715,45 @@ void MacroAssembler::resolve_oop_handle(Register result, Register tmp) {
 void MacroAssembler::access_load_at(BasicType type, DecoratorSet decorators,
                                     Register dst, Address src,
                                     Register tmp1, Register thread_tmp) {
-  BarrierSetAssembler *bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
   decorators = AccessInternal::decorator_fixup(decorators);
+
   bool as_raw = (decorators & AS_RAW) != 0;
-  if (as_raw) {
-    bs->BarrierSetAssembler::load_at(this, decorators, type, dst, src, tmp1, thread_tmp);
-  } else {
-    bs->load_at(this, decorators, type, dst, src, tmp1, thread_tmp);
+  bool in_heap = (decorators & IN_HEAP) != 0;
+  bool in_native = (decorators & IN_NATIVE) != 0;
+  bool is_not_null = (decorators & IS_NOT_NULL) != 0;
+  switch (type) {
+  case T_OBJECT:
+  case T_ARRAY: {
+    if (in_heap) {
+      if (UseCompressedOops) {
+         lwu(dst, src);
+        if (is_not_null) {
+           decode_heap_oop_not_null(dst);
+        } else {
+           decode_heap_oop(dst);
+        }
+      } else {
+         ld(dst, src);
+      }
+    } else {
+      assert(in_native, "why else?");
+       ld(dst, src);
+    }
+    break;
   }
-}
+  case T_BOOLEAN:  load_unsigned_byte (dst, src); break;
+  case T_BYTE:     load_signed_byte   (dst, src); break;
+  case T_CHAR:     load_unsigned_short(dst, src); break;
+  case T_SHORT:    load_signed_short  (dst, src); break;
+  case T_INT:      lw                 (dst, src); break;
+  case T_LONG:     ld                 (dst, src); break;
+  case T_ADDRESS:  ld                 (dst, src); break;
+  case T_FLOAT:    flw                (f10, src); break;
+  case T_DOUBLE:   fld                (f10, src); break;
+  default: Unimplemented();
+
+  }
+ }
 
 void MacroAssembler::null_check(Register reg, int offset) {
   if (needs_explicit_null_check(offset)) {
@@ -1739,15 +1769,45 @@ void MacroAssembler::null_check(Register reg, int offset) {
 
 void MacroAssembler::access_store_at(BasicType type, DecoratorSet decorators,
                                      Address dst, Register src,
-                                     Register tmp1, Register thread_tmp) {
-  BarrierSetAssembler *bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
+                                     Register val, Register thread_tmp) {
   decorators = AccessInternal::decorator_fixup(decorators);
-  bool as_raw = (decorators & AS_RAW) != 0;
-  if (as_raw) {
-    bs->BarrierSetAssembler::store_at(this, decorators, type, dst, src, tmp1, thread_tmp);
-  } else {
-    bs->store_at(this, decorators, type, dst, src, tmp1, thread_tmp);
+  bool in_heap = (decorators & IN_HEAP) != 0;
+  bool in_native = (decorators & IN_NATIVE) != 0;
+  switch (type) {
+  case T_OBJECT:
+  case T_ARRAY: {
+    val = val == noreg ? zr : val;
+    if (in_heap) {
+      if (UseCompressedOops) {
+        assert(!dst.uses(val), "not enough registers");
+        if (val != zr) {
+           encode_heap_oop(val);
+        }
+         sw(val, dst);
+      } else {
+         sd(val, dst);
+      }
+    } else {
+      assert(in_native, "why else?");
+       sd(val, dst);
+    }
+    break;
   }
+  case T_BOOLEAN:
+     andi(val, val, 0x1);  // boolean is true if LSB is 1
+     sb(val, dst);
+    break;
+  case T_BYTE:     sb(val, dst); break;
+  case T_CHAR:     sh(val, dst); break;
+  case T_SHORT:    sh(val, dst); break;
+  case T_INT:      sw(val, dst); break;
+  case T_LONG:     sd(val, dst); break;
+  case T_ADDRESS:  sd(val, dst); break;
+  case T_FLOAT:    fsw(f10,  dst); break;
+  case T_DOUBLE:   fsd(f10,  dst); break;
+  default: Unimplemented();
+  }
+
 }
 
 // Algorithm must match CompressedOops::encode.
