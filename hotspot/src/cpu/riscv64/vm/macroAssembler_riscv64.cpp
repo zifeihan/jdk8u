@@ -3578,13 +3578,15 @@ void MacroAssembler::cmpptr(Register src1, Address src2, Label& equal) {
 }
 
 void MacroAssembler::oop_equal(Register obj1, Register obj2, Label& equal, bool is_far) {
-  BarrierSetAssembler* bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
-  bs->obj_equals(this, obj1, obj2, equal, is_far);
+  //BarrierSetAssembler* bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
+  //bs->obj_equals(this, obj1, obj2, equal, is_far);
+   beq(obj1, obj2, equal, is_far);
 }
 
 void MacroAssembler::oop_nequal(Register obj1, Register obj2, Label& nequal, bool is_far) {
-  BarrierSetAssembler* bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
-  bs->obj_nequals(this, obj1, obj2, nequal, is_far);
+  //BarrierSetAssembler* bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
+  //bs->obj_nequals(this, obj1, obj2, nequal, is_far);
+   bne(obj1, obj2, nequal, is_far);
 }
 
 #ifdef COMPILER2
