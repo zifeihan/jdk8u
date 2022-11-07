@@ -2191,10 +2191,11 @@ void TemplateTable::if_acmp(Condition cc)
   __ pop_ptr(x11);
 
   if (cc == equal) {
-    //__ oop_nequal(x11, x10, not_taken);
-    __ beq(x11, x10, not_taken);
+    __ oop_nequal(x11, x10, not_taken);
+    //__ beq(x11, x10, not_taken);
   } else if (cc == not_equal) {
-    __ bne(x11, x10, not_taken);
+    //__ bne(x11, x10, not_taken);
+    __ oop_nequal(x11, x10, not_taken);
   }
   branch(false, false);
   __ bind(not_taken);
