@@ -258,7 +258,8 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
             __ membar(__ StoreStore);
           }
           __ BIND(L_loop);
-          __ sb(zr, Address(start, count));
+          __ add(count, count, start);
+          __ sb(zr, Address(count, 0));
           __ addi(count, count, -1);//replace subs
           __ bge(count, 0, L_loop);
         }
@@ -1532,14 +1533,14 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
     __ align(OptoLoopAlignment);
 
     __ BIND(L_store_element);
-    __ store_heap_oop_rv(__ post(to, UseCompressedOops ? 4 : 8), copied_oop); // store the oop  // store the oop
+    __ store_heap_oop_rv(Address(to, UseCompressedOops ? 4 : 8), copied_oop); // store the oop  // store the oop
     __ add(to, to, UseCompressedOops ? 4 : 8);
     __ sub(count, count, 1);
     __ beqz(count, L_do_card_marks);
 
     // ======== loop entry is here ========
     __ BIND(L_load_element);
-    __ load_heap_oop_rv(copied_oop, __ post(from, UseCompressedOops ? 4 : 8));  // load the oop
+    __ load_heap_oop_rv(copied_oop, Address(from, UseCompressedOops ? 4 : 8));  // load the oop
     __ add(from, from, UseCompressedOops ? 4 : 8);
     __ beqz(copied_oop, L_store_element);
 

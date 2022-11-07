@@ -247,6 +247,9 @@ class Address {
       _rspec(rspec),
       _target(target)  { }
   Address(address target, relocInfo::relocType rtype = relocInfo::external_word_type);
+    Address(Register r, Register r1, extend ext = lsl())
+    : _mode(base_plus_offset), _base(r), _index(r1),
+    _ext(ext), _offset(0), _target(0) { }
 
   const Register base() const {
     guarantee((_mode == base_plus_offset | _mode == pcrel | _mode == literal), "wrong mode");
@@ -427,20 +430,7 @@ public:
     emit_int32((jint)insn);
   }
 
-    Address adjust(Register base, int offset, bool preIncrement) {
-    if (preIncrement)
-      return Address(Pre(base, offset));
-    else
-      return Address(Post(base, offset));
-  }
 
-  Address pre(Register base, int offset) {
-    return adjust(base, offset, true);
-  }
- 
-  Address post (Register base, int offset) {
-    return adjust(base, offset, false);
-  }
 
   void halt() {
     emit_int32(0);
