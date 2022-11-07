@@ -3294,7 +3294,7 @@ void MacroAssembler::remove_frame(int framesize) {
   add(sp, sp, framesize);
 }
 
-void MacroAssembler::reserved_stack_check() {
+/*void MacroAssembler::reserved_stack_check() {
     // testing if reserved zone needs to be enabled
     Label no_reserved_zone_enabling;
 
@@ -3317,7 +3317,7 @@ void MacroAssembler::reserved_stack_check() {
     should_not_reach_here();
 
     bind(no_reserved_zone_enabling);
-}
+}*/
 
 // Move the address of the polling page into dest.
 void MacroAssembler::get_polling_page(Register dest, address page, int32_t &offset, relocInfo::relocType rtype) {

@@ -2514,7 +2514,7 @@ void JavaThread::create_stack_guard_pages() {
   }
 }
 
-void JavaThread::enable_stack_reserved_zone() {
+/*void JavaThread::enable_stack_reserved_zone() {
   assert(_stack_guard_state == stack_guard_reserved_disabled, "inconsistent state");
 
   // The base notation is from the stack's point of view, growing downward.
@@ -2530,7 +2530,7 @@ void JavaThread::enable_stack_reserved_zone() {
     warning("Attempt to guard stack reserved zone failed.");
   }
   enable_register_stack_guard();
-}
+}*/
 
 void JavaThread::remove_stack_guard_pages() {
   assert(Thread::current() == this, "from different thread");
