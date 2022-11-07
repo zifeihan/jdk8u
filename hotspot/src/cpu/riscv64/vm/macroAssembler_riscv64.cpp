@@ -1768,8 +1768,8 @@ void MacroAssembler::null_check(Register reg, int offset) {
 }
 
 void MacroAssembler::access_store_at(BasicType type, DecoratorSet decorators,
-                                     Address dst, Register src,
-                                     Register val, Register thread_tmp) {
+                                     Address dst, Register val,
+                                     Register temp1, Register thread_tmp) {
   decorators = AccessInternal::decorator_fixup(decorators);
   bool in_heap = (decorators & IN_HEAP) != 0;
   bool in_native = (decorators & IN_NATIVE) != 0;
