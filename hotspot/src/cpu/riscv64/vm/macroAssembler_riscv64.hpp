@@ -719,7 +719,7 @@ class MacroAssembler: public Assembler {
   void build_frame(int framesize);
   void remove_frame(int framesize);
 
-  void reserved_stack_check();
+  //void reserved_stack_check();
   void get_polling_page(Register dest, address page, int32_t &offset, relocInfo::relocType rtype);
   address read_polling_page(Register r, address page, relocInfo::relocType rtype);
   address read_polling_page(Register r, int32_t offset, relocInfo::relocType rtype);
