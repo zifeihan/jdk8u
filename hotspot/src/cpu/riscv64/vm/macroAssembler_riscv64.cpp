@@ -1992,7 +1992,8 @@ void MacroAssembler::store_check_part_2(Register obj) {
   if (UseConcMarkSweepGC && CMSPrecleaningEnabled) {
       membar(StoreStore);
   }
-  sb(zr, Address(obj, t0));
+  add(t0, obj, t0);
+  sb(zr, Address(t0, 0));
 }
 
 void MacroAssembler::g1_write_barrier_pre(Register obj,
