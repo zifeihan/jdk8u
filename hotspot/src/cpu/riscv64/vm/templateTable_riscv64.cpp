@@ -2990,10 +2990,10 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static) {
     if (!is_static) {
       pop_and_check_object(obj);
     }
-   // __ add(off, obj, off); // if static, obj from cache, else obj from stack.
+    __ add(off, obj, off); // if static, obj from cache, else obj from stack.
    const Address field(off, 0); // off register as temparator register.
-   __ sb(x10, field);
-    __ access_store_at(T_BYTE, IN_HEAP, field, x10, noreg, noreg);
+    __ sb(x10, field);
+   // __ access_store_at(T_BYTE, IN_HEAP, field, x10, noreg, noreg);
     /*if (rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_bputfield, bc, x11, true, byte_no);
     }*/
