@@ -2300,10 +2300,11 @@ void MacroAssembler::lookup_interface_method(Register recv_klass,
   int vtable_base = InstanceKlass::vtable_start_offset() * wordSize;
   int itentry_off = itableMethodEntry::method_offset_in_bytes();
   int scan_step   = itableOffsetEntry::size() * wordSize;
-  int vte_size    = vtableEntry::size_in_bytes();
+ // int vte_size    = vtableEntry::size_in_bytes();
+  int vte_size   = vtableEntry::size() * wordSize;
   assert(vte_size == wordSize, "else adjust times_vte_scale");
 
-  lwu(scan_temp, Address(recv_klass, Klass::vtable_length_offset()));
+  lwu(scan_temp, Address(recv_klass, InstanceKlass::vtable_length_offset() * wordSize));
 
   // %%% Could store the aligned, prescaled offset in the klassoop.
   slli(scan_temp, scan_temp, 3);
