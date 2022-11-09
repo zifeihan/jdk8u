@@ -202,7 +202,7 @@ class SharedRuntime: AllStatic {
   static address continuation_for_implicit_exception(JavaThread* thread,
                                                      address faulting_pc,
                                                      ImplicitExceptionKind exception_kind);
-  static void enable_stack_reserved_zone(JavaThread* thread);
+  //static void enable_stack_reserved_zone(JavaThread* thread);
   // Shared stub locations
   static address get_poll_stub(address pc);
   static frame look_for_reserved_stack_annotated_method(JavaThread* thread, frame fr);

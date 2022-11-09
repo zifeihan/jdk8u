@@ -754,12 +754,18 @@ void InterpreterGenerator::lock_method() {
   // get synchronization object
   {
     Label done;
+    const int mirror_offset = in_bytes(Klass::java_mirror_offset());
     __ lwu(x10, access_flags);
     __ andi(t0, x10, JVM_ACC_STATIC);
     // get receiver (assume this is frequent case)
     __ ld(x10, Address(xlocals, Interpreter::local_offset_in_bytes(0)));
     __ beqz(t0, done);
-    __ load_mirror(x10, xmethod);
+    //__ load_mirror(x10, xmethod);
+    __ ld(x10, Address(xmethod, Method::const_offset()));
+    __ ld(x10, Address(x10, ConstMethod::constants_offset()));
+    __ ld(x10, Address(x10,
+                           ConstantPool::pool_holder_offset_in_bytes()));
+    __ ld(x10, Address(x10, mirror_offset));
 
 #ifdef ASSERT
     {
@@ -861,11 +867,11 @@ void TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {
     __ load_mirror(x28, xmethod);
     __ sd(x28, Address(sp, 4 * wordSize));
   } else
-#endif*/
+#endif
   {
     __ load_mirror(t0, xmethod);
     __ sd(t0, Address(sp, 4 * wordSize));
-  }
+  }*/
   __ sd(zr, Address(sp, 5 * wordSize));
 
   __ load_constant_pool_cache(xcpool, xmethod);
@@ -948,9 +954,20 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
 
   // Load the value of the referent field.
   const Address field_address(local_0, referent_offset);
-  BarrierSetAssembler *bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
-  bs->load_at(_masm, IN_HEAP | ON_WEAK_OOP_REF, T_OBJECT, local_0, field_address, /*tmp1*/ t1, /*tmp2*/ t0);
+  //BarrierSetAssembler *bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
+ // bs->load_at(_masm, IN_HEAP | ON_WEAK_OOP_REF, T_OBJECT, local_0, field_address, /*tmp1*/ t1, /*tmp2*/ t0);
+  __ load_heap_oop_rv(local_0, field_address);
 
+    // Generate the G1 pre-barrier code to log the value of
+    // the referent field in an SATB buffer.
+  __ enter(); // g1_write may call runtime
+  __ g1_write_barrier_pre(noreg /* obj */,
+                            local_0 /* pre_val */,
+                            xthread /* thread */,
+                            t1 /* tmp */,
+                            true /* tosca_live */,
+                            true /* expand_call */);
+    __ leave();
   // areturn
   __ andi(sp, x9, -16);  // done with stack
   __ ret();
@@ -1001,10 +1018,10 @@ void InterpreterGenerator::bang_stack_shadow_pages(bool native_call) {
   // an interpreter frame with greater than a page of locals, so each page
   // needs to be checked.  Only true for non-native.
   if (UseStackBanging) {
-    const int n_shadow_pages = JavaThread::stack_shadow_zone_size() / os::vm_page_size();
-    const int start_page = native_call ? n_shadow_pages : 1;
+    //const int n_shadow_pages = JavaThread::stack_shadow_zone_size() / os::vm_page_size();
+    const int start_page = native_call ? StackShadowPages : 1;
     const int page_size = os::vm_page_size();
-    for (int pages = start_page; pages <= n_shadow_pages ; pages++) {
+    for (int pages = start_page; pages <= StackShadowPages ; pages++) {
       __ sub(t1, sp, pages * page_size);
       __ sd(zr, Address(t1));
     }
@@ -1186,11 +1203,16 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
   // pass mirror handle if static call
   {
     Label L;
+    const int mirror_offset = in_bytes(Klass::java_mirror_offset());
     __ lwu(t, Address(xmethod, Method::access_flags_offset()));
     __ andi(t0, t, JVM_ACC_STATIC);
     __ beqz(t0, L);
     // get mirror
-    __ load_mirror(t, xmethod);
+    //__ load_mirror(t, xmethod);
+    __ ld(t, Address(xmethod, Method::const_offset()));
+    __ ld(t, Address(t, ConstMethod::constants_offset()));
+    __ ld(t, Address(t, ConstantPool::pool_holder_offset_in_bytes()));
+    __ ld(t, Address(t, mirror_offset));
     // copy mirror into activation frame
     __ sd(t, Address(fp, frame::interpreter_frame_oop_temp_offset * wordSize));
     // pass handle to mirror
@@ -1329,7 +1351,31 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     __ bne(t, result_handler, no_oop);
     // Unbox oop result, e.g. JNIHandles::resolve result.
     __ pop(ltos);
-    __ resolve_jobject(x10, xthread, t);
+   // __ resolve_jobject(x10, xthread, t);
+    __ beqz(x10, store_result);   // Use NULL as-is.
+    STATIC_ASSERT(JNIHandles::weak_tag_mask == 1u);
+    //__ tbz(r0, 0, not_weak);    // Test for jweak tag.
+    __ andi(t0,x10,0);
+    __ beqz(t0,not_weak);
+    // Resolve jweak.
+    __ ld(x10, Address(x10, -JNIHandles::weak_tag_value));
+#if INCLUDE_ALL_GCS
+    if (UseG1GC) {
+      __ enter();                   // Barrier may call runtime.
+      __ g1_write_barrier_pre(noreg /* obj */,
+                              x10 /* pre_val */,
+                              xthread /* thread */,
+                              t /* tmp */,
+                              true /* tosca_live */,
+                              true /* expand_call */);
+      __ leave();
+    }
+#endif // INCLUDE_ALL_GCS
+    __ j(store_result);
+    __ bind(not_weak);
+    // Resolve (untagged) jobject.
+    __ ld(x10, Address(x10, 0));
+    __ bind(store_result);
     __ sd(x10, Address(fp, frame::interpreter_frame_oop_temp_offset * wordSize));
     // keep stack depth as expected by pushing oop which will eventually be discarded
     __ push(ltos);

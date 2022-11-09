@@ -272,13 +272,29 @@ void InterpreterMacroAssembler::get_cache_entry_pointer_at_bcp(Register cache,
 }
 
 // Load object from cpool->resolved_references(index)
+/*void InterpreterMacroAssembler::load_resolved_reference_at_index(
+                                Register result, Register index, Register tmp) {
+  assert_different_registers(result, index);
+
+  get_constant_pool(result);
+  // load pointer for resolved_references[] objArray
+ // ld(result, Address(result, ConstantPool::cache_offset_in_bytes()));
+  ld(result, Address(result, ConstantPool::resolved_references_offset_in_bytes()));
+  //resolve_oop_handle(result, tmp);
+  // Add in the index
+  addi(index, index, arrayOopDesc::base_offset_in_bytes(T_OBJECT) >> LogBytesPerHeapOop);
+  slli(index, index, LogBytesPerHeapOop);
+  add(result, result, index);
+ // load_heap_oop(result, Address(result, 0));
+ load_heap_oop_rv(result, Address(result, arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
+}*/
 void InterpreterMacroAssembler::load_resolved_reference_at_index(
                                 Register result, Register index, Register tmp) {
   assert_different_registers(result, index);
 
   get_constant_pool(result);
   // load pointer for resolved_references[] objArray
-  ld(result, Address(result, ConstantPool::cache_offset_in_bytes()));
+ // ld(result, Address(result, ConstantPool::cache_offset_in_bytes()));
   ld(result, Address(result, ConstantPool::resolved_references_offset_in_bytes()));
   resolve_oop_handle(result, tmp);
   // Add in the index
@@ -288,17 +304,17 @@ void InterpreterMacroAssembler::load_resolved_reference_at_index(
   load_heap_oop(result, Address(result, 0));
 }
 
-void InterpreterMacroAssembler::load_resolved_klass_at_offset(
-                                Register cpool, Register index, Register klass, Register temp) {
-  slli(temp, index, LogBytesPerWord);
-  add(temp, temp, cpool);
-  lhu(temp, Address(temp, sizeof(ConstantPool))); // temp = resolved_klass_index
-  ld(klass, Address(cpool, ConstantPool::resolved_klasses_offset_in_bytes())); // klass = cpool->_resolved_klasses
-  slli(temp, temp, LogBytesPerWord);
-  add(klass, klass, temp);
-  ld(klass, Address(klass, Array<Klass*>::base_offset_in_bytes()));
-}
 
+void InterpreterMacroAssembler::load_resolved_klass_at_offset(
+                                 Register cpool, Register index, Register temp, Register temp2) {
+  slli(temp2, index, LogBytesPerWord);
+  add(temp, temp2, cpool);
+  ld(temp, Address(temp, sizeof(ConstantPool))); // temp = resolved_klass_index
+  //ld(klass, Address(cpool, ConstantPool::resolved_klasses_offset_in_bytes())); // klass = cpool->_resolved_klasses
+  //slli(temp, temp, LogBytesPerWord);
+  //add(klass, klass, temp);
+ // ld(klass, Address(klass, Array<Klass*>::base_offset_in_bytes()));
+}
 // Generate a subtype check: branch to ok_is_subtype if sub_klass is a
 // subtype of super_klass.
 //
@@ -1818,7 +1834,7 @@ void InterpreterMacroAssembler::profile_return_type(Register mdp, Register ret, 
     test_method_data_pointer(mdp, profile_continue);
 
     if (MethodData::profile_return_jsr292_only()) {
-      assert(Method::intrinsic_id_size_in_bytes() == 2, "assuming Method::_intrinsic_id is u2");
+     // assert(Method::intrinsic_id_size_in_bytes() == 2, "assuming Method::_intrinsic_id is u2");
 
       // If we don't profile all invoke bytecodes we must make sure
       // it's a bytecode we indeed profile. We can't go back to the

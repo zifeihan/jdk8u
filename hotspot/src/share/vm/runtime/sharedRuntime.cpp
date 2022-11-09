@@ -2102,13 +2102,13 @@ void SharedRuntime::print_call_statistics(int comp_total) {
 }
 #endif
 
-JRT_LEAF(void, SharedRuntime::enable_stack_reserved_zone(JavaThread* thread))
+/*JRT_LEAF(void, SharedRuntime::enable_stack_reserved_zone(JavaThread* thread))
   assert(thread->is_Java_thread(), "Only Java threads have a stack reserved zone");
   if (thread->stack_reserved_zone_disabled()) {
   thread->enable_stack_reserved_zone();
   }
   thread->set_reserved_stack_activation(thread->stack_base());
-JRT_END
+JRT_END*/
 
 // A simple wrapper class around the calling convention information
 // that allows sharing of adapters for the same calling convention.

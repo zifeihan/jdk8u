@@ -313,6 +313,7 @@ class Thread: public ThreadShadow {
   virtual bool is_VM_thread()       const            { return false; }
   virtual bool is_Java_thread()     const            { return false; }
   virtual bool is_Compiler_thread() const            { return false; }
+  virtual bool is_service_thread() const             { return false; }
   virtual bool is_hidden_from_external_view() const  { return false; }
   virtual bool is_jvmti_agent_thread() const         { return false; }
   // True iff the thread can perform GC operations at a safepoint.
@@ -788,6 +789,7 @@ typedef void (*ThreadFunction)(JavaThread*, TRAPS);
 class JavaThread: public Thread {
   friend class VMStructs;
  private:
+  bool           _in_asgct;                      // Is set when this JavaThread is handling ASGCT call
   JavaThread*    _next;                          // The next thread in the Threads list
   oop            _threadObj;                     // The Java level thread object
 
@@ -925,7 +927,7 @@ class JavaThread: public Thread {
   // Precompute the limit of the stack as used in stack overflow checks.
   // We load it from here to simplify the stack overflow check in assembly.
   address          _stack_overflow_limit;
-  address          _reserved_stack_activation;
+  //address          _reserved_stack_activation;
   // Compiler exception handling (NOTE: The _exception_oop is *NOT* the same as _pending_exception. It is
   // used to temp. parsing values into and out of the runtime system during exception handling for compiled
   // code)
@@ -1315,12 +1317,12 @@ class JavaThread: public Thread {
     { return (a <= stack_yellow_zone_base()) && (a >= stack_red_zone_base()); }
   bool in_stack_red_zone(address a)
     { return (a <= stack_red_zone_base()) && (a >= (address)((intptr_t)stack_base() - stack_size())); }
-  static size_t _stack_shadow_zone_size;
-  static size_t stack_shadow_zone_size() {
+  //static size_t _stack_shadow_zone_size;
+ /* static size_t stack_shadow_zone_size() {
     assert(_stack_shadow_zone_size > 0, "Don't call this before the field is initialized.");
     return _stack_shadow_zone_size;
-  }
-  void enable_stack_reserved_zone();
+  }*/
+  //void enable_stack_reserved_zone();
   inline bool stack_reserved_zone_disabled();
   static size_t stack_reserved_zone_size() {
     // _stack_reserved_zone_size may be 0. This indicates the feature is off.
@@ -1346,12 +1348,12 @@ class JavaThread: public Thread {
   void disable_stack_red_zone();
   void disable_stack_yellow_reserved_zone();
   void disable_stack_reserved_zone();
-  void set_reserved_stack_activation(address addr) {
+  /*void set_reserved_stack_activation(address addr) {
     assert(_reserved_stack_activation == stack_base()
             || _reserved_stack_activation == NULL
             || addr == stack_base(), "Must not be set twice");
     _reserved_stack_activation = addr;
-  }
+  }*/
 
   inline bool stack_guard_zone_unused();
   inline bool stack_yellow_zone_disabled();
@@ -1418,7 +1420,7 @@ class JavaThread: public Thread {
   static ByteSize is_method_handle_return_offset() { return byte_offset_of(JavaThread, _is_method_handle_return); }
   static ByteSize stack_guard_state_offset()     { return byte_offset_of(JavaThread, _stack_guard_state   ); }
   static ByteSize suspend_flags_offset()         { return byte_offset_of(JavaThread, _suspend_flags       ); }
-  static ByteSize reserved_stack_activation_offset() { return byte_offset_of(JavaThread, _reserved_stack_activation); }
+  //static ByteSize reserved_stack_activation_offset() { return byte_offset_of(JavaThread, _reserved_stack_activation); }
   static ByteSize do_not_unlock_if_synchronized_offset() { return byte_offset_of(JavaThread, _do_not_unlock_if_synchronized); }
   static ByteSize should_post_on_exceptions_flag_offset() {
     return byte_offset_of(JavaThread, _should_post_on_exceptions_flag);
@@ -1831,6 +1833,10 @@ private:
 public:
   uint get_claimed_par_id() { return _claimed_par_id; }
   void set_claimed_par_id(uint id) { _claimed_par_id = id;}
+
+  // AsyncGetCallTrace support
+  inline bool in_asgct(void) {return _in_asgct;}
+  inline void set_in_asgct(bool value) {_in_asgct = value;}
 };
 
 // Inline implementation of JavaThread::current
