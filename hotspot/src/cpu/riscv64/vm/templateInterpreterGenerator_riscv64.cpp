@@ -278,7 +278,7 @@ address InterpreterGenerator::generate_math_entry(AbstractInterpreter::MethodKin
     __ mv(t0, fn);
     __ jalr(t0);
     break;
-  case Interpreter::java_lang_math_fmaD :
+  /*case Interpreter::java_lang_math_fmaD :
     if (UseFMA) {
       entry_point = __ pc();
       __ fld(f10, Address(esp, 4 * Interpreter::stackElementSize));
@@ -297,7 +297,7 @@ address InterpreterGenerator::generate_math_entry(AbstractInterpreter::MethodKin
       __ fmadd_s(f10, f10, f11, f12);
       __ mv(sp, x30); // Restore caller's SP
     }
-    break;
+    break;*/
   default:
     ;
   }
