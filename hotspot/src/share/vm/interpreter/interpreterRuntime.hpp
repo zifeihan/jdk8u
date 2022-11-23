@@ -69,7 +69,7 @@ class InterpreterRuntime: AllStatic {
   static void      note_trap_inner(JavaThread* thread, int reason,
                                    methodHandle trap_method, int trap_bci, TRAPS);
   static void      note_trap(JavaThread *thread, int reason, TRAPS);
-  static void resolve_from_cache(JavaThread* thread, Bytecodes::Code bytecode);
+  //static void resolve_from_cache(JavaThread* thread, Bytecodes::Code bytecode);
 #ifdef CC_INTERP
   // Profile traps in C++ interpreter.
   static void      note_trap(JavaThread* thread, int reason, Method *method, int trap_bci);
