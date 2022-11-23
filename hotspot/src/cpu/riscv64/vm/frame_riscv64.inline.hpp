@@ -192,9 +192,9 @@ inline Method** frame::interpreter_frame_method_addr() const {
 
 // Mirror
 
-inline oop* frame::interpreter_frame_mirror_addr() const {
-  return (oop*)addr_at(interpreter_frame_mirror_offset);
-}
+//inline oop* frame::interpreter_frame_mirror_addr() const {
+ // return (oop*)addr_at(interpreter_frame_mirror_offset);//
+//}
 
 // top of expression stack
 inline intptr_t* frame::interpreter_frame_tos_address() const {

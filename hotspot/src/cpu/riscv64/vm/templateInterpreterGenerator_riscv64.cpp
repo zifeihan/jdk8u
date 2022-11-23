@@ -278,7 +278,7 @@ address InterpreterGenerator::generate_math_entry(AbstractInterpreter::MethodKin
     __ mv(t0, fn);
     __ jalr(t0);
     break;
-  case Interpreter::java_lang_math_fmaD :
+  /*case Interpreter::java_lang_math_fmaD :
     if (UseFMA) {
       entry_point = __ pc();
       __ fld(f10, Address(esp, 4 * Interpreter::stackElementSize));
@@ -297,7 +297,7 @@ address InterpreterGenerator::generate_math_entry(AbstractInterpreter::MethodKin
       __ fmadd_s(f10, f10, f11, f12);
       __ mv(sp, x30); // Restore caller's SP
     }
-    break;
+    break;*/
   default:
     ;
   }
@@ -624,7 +624,8 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
     if (ProfileInterpreter && profile_method != NULL) {
       // Test to see if we should create a method data oop
       __ ld(t1, Address(xmethod, Method::method_counters_offset()));
-      __ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
+      //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
+      __ lwu(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit)); 
       __ blt(x10, t1, *profile_method_continue);
 
       // if no method data exists, go to profile_method
@@ -633,7 +634,8 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
 
     {
       __ ld(t1, Address(xmethod, Method::method_counters_offset()));
-      __ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_invocation_limit_offset())));
+      //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_invocation_limit_offset())));
+      __ lwu(t1, ExternalAddress((address) &InvocationCounter::InterpreterInvocationLimit)); 
       __ bltu(x10, t1, done);
       __ j(*overflow); // offset is too large so we have to use j instead of bgeu here
     }
@@ -1333,10 +1335,10 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
   // reset_last_Java_frame
   __ reset_last_Java_frame(true);
 
-  if (CheckJNICalls) {
+  //if (CheckJNICalls) {
     // clear_pending_jni_exception_check
-    __ sd(zr, Address(xthread, JavaThread::pending_jni_exception_check_fn_offset()));
-  }
+   // __ sd(zr, Address(xthread, JavaThread::pending_jni_exception_check_fn_offset()));
+ // }
 
   // reset handle block
   __ ld(t, Address(xthread, JavaThread::active_handles_offset()));
@@ -1385,7 +1387,8 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
   {
     Label no_reguard;
     __ lwu(t0, Address(xthread, in_bytes(JavaThread::stack_guard_state_offset())));
-    __ addi(t1, zr, JavaThread::stack_guard_yellow_reserved_disabled);
+    //__ addi(t1, zr, JavaThread::stack_guard_yellow_reserved_disabled);
+    __ addi(t1, zr, JavaThread::stack_guard_yellow_disabled);
     __ bne(t0, t1, no_reguard);
 
     __ pusha(); // only save smashed registers

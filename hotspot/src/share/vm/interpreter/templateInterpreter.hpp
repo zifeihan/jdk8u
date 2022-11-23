@@ -175,7 +175,7 @@ class TemplateInterpreter: public AbstractInterpreter {
   // Safepoint support
   static void       notice_safepoints();                        // stops the thread when reaching a safepoint
   static void       ignore_safepoints();                        // ignores safepoints
-  static address*   safept_table(TosState state)                { return _safept_table.table_for(state); }
+  //static address*   safept_table(TosState state)                { return _safept_table.table_for(state); }
   // Deoptimization support
   // Compute the entry address for continuation after
   static address deopt_continue_after_entry(Method* method,

@@ -380,6 +380,8 @@ class CodeBuffer: public StackObj {
     _oop_recorder    = NULL;
     _decode_begin    = NULL;
     _overflow_arena  = NULL;
+    _last_insn       =NULL;
+    _code_strings    =CodeStrings();
   }
 
   void initialize(address code_start, csize_t code_size) {

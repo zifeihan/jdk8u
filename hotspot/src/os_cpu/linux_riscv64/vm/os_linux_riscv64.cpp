@@ -643,8 +643,10 @@ void os::print_context(outputStream *st, void *context) {
   // point to garbage if entry point in an nmethod is corrupted. Leave
   // this at the end, and hope for the best.
   address pc = os::Linux::ucontext_get_pc(uc);
-  print_instructions(st, pc, sizeof(char));
-  st->cr();
+ // print_instructions(st, pc, sizeof(char));
+ // st->cr();
+  st->print_cr("Instructions: (pc=" PTR_FORMAT ")", p2i(pc));
+  print_hex_dump(st, pc - 32, pc + 32, sizeof(char));
 }
 
 void os::print_register_info(outputStream *st,  void *context) {
@@ -677,9 +679,9 @@ void os::verify_stack_alignment() {
 }
 #endif
 
-int os::extra_bang_size_in_bytes() {
-  return 0;
-}
+///int os::extra_bang_size_in_bytes() {
+////  return 0;
+//}
 
 extern "C" {
   int SpinPause() {

@@ -333,7 +333,7 @@ class Thread: public ThreadShadow {
   // Returns the current thread
   static inline Thread* current();
   static inline Thread* current_or_null();
-  static inline Thread* current_or_null_safe();
+  //static inline Thread* current_or_null_safe();
 
   // Common thread operations
   static void set_priority(Thread* thread, ThreadPriority priority);
@@ -558,7 +558,7 @@ protected:
   size_t  stack_size() const           { return _stack_size; }
   void    set_stack_size(size_t size)  { _stack_size = size; }
   void    record_stack_base_and_size();
-  address stack_end()  const           { return stack_base() - stack_size(); }
+  //address stack_end()  const           { return stack_base() - stack_size(); }
 
   bool    on_local_stack(address adr) const {
     /* QQQ this has knowledge of direction, ought to be a stack method */
@@ -616,7 +616,7 @@ protected:
 
   static ByteSize stack_base_offset()            { return byte_offset_of(Thread, _stack_base ); }
   static ByteSize stack_size_offset()            { return byte_offset_of(Thread, _stack_size ); }
-  static ByteSize polling_page_offset()          { return byte_offset_of(Thread, _polling_page); }
+  //static ByteSize polling_page_offset()          { return byte_offset_of(Thread, _polling_page); }
 #define TLAB_FIELD_OFFSET(name) \
   static ByteSize tlab_##name##_offset()         { return byte_offset_of(Thread, _tlab) + ThreadLocalAllocBuffer::name##_offset(); }
 
@@ -693,12 +693,12 @@ inline Thread* Thread::current_or_null() {
   }
   return NULL;
 }
-inline Thread* Thread::current_or_null_safe() {
+/*inline Thread* Thread::current_or_null_safe() {
   if (ThreadLocalStorage::is_initialized()) {
     return ThreadLocalStorage::thread();
   }
   return NULL;
-}
+}*/
 
 // Name support for threads.  non-JavaThread subclasses with multiple
 // uniquely named instances should derive from this.
@@ -916,8 +916,8 @@ class JavaThread: public Thread {
     stack_guard_unused,         // not needed
     stack_guard_yellow_disabled,// disabled (temporarily) after stack overflow
     stack_guard_enabled,         // enabled
-    stack_guard_yellow_reserved_disabled,// disabled (temporarily) after stack overflo
-    stack_guard_reserved_disabled
+    //stack_guard_yellow_reserved_disabled,// disabled (temporarily) after stack overflo
+    //stack_guard_reserved_disabled
   };
 
  private:
@@ -1323,22 +1323,22 @@ class JavaThread: public Thread {
     return _stack_shadow_zone_size;
   }*/
   //void enable_stack_reserved_zone();
-  inline bool stack_reserved_zone_disabled();
-  static size_t stack_reserved_zone_size() {
+  //inline bool stack_reserved_zone_disabled();
+  /*static size_t stack_reserved_zone_size() {
     // _stack_reserved_zone_size may be 0. This indicates the feature is off.
     return _stack_reserved_zone_size;
   }
   address stack_reserved_zone_base() {
     return (address)(stack_end() +
                      (stack_red_zone_size() + stack_yellow_zone_size() + stack_reserved_zone_size()));
-  }
-  bool in_stack_yellow_reserved_zone(address a) {
-    return (a <= stack_reserved_zone_base()) && (a >= stack_red_zone_base());
-  }
-  bool in_stack_reserved_zone(address a) {
+  }*/
+  //bool in_stack_yellow_reserved_zone(address a) {
+    //return (a <= stack_reserved_zone_base()) && (a >= stack_red_zone_base());
+  //}
+  /*bool in_stack_reserved_zone(address a) {
     return (a <= stack_reserved_zone_base()) &&
            (a >= (address)((intptr_t)stack_reserved_zone_base() - stack_reserved_zone_size()));
-   }
+   }*/
   void create_stack_guard_pages();
   void remove_stack_guard_pages();
 
@@ -1346,8 +1346,8 @@ class JavaThread: public Thread {
   void disable_stack_yellow_zone();
   void enable_stack_red_zone();
   void disable_stack_red_zone();
-  void disable_stack_yellow_reserved_zone();
-  void disable_stack_reserved_zone();
+  //void disable_stack_yellow_reserved_zone();
+  //void disable_stack_reserved_zone();
   /*void set_reserved_stack_activation(address addr) {
     assert(_reserved_stack_activation == stack_base()
             || _reserved_stack_activation == NULL
@@ -1359,9 +1359,9 @@ class JavaThread: public Thread {
   inline bool stack_yellow_zone_disabled();
   inline bool stack_yellow_zone_enabled();
 
-  static size_t stack_yellow_reserved_zone_size() {
-    return _stack_yellow_zone_size + _stack_reserved_zone_size;
-  }
+ // static size_t stack_yellow_reserved_zone_size() {
+   // return _stack_yellow_zone_size + _stack_reserved_zone_size;
+ // }
 
   // Attempt to reguard the stack after a stack overflow may have occurred.
   // Returns true if (a) guard pages are not needed on this thread, (b) the
@@ -1425,9 +1425,9 @@ class JavaThread: public Thread {
   static ByteSize should_post_on_exceptions_flag_offset() {
     return byte_offset_of(JavaThread, _should_post_on_exceptions_flag);
   }
-  static ByteSize pending_jni_exception_check_fn_offset() {
-    return byte_offset_of(JavaThread, _pending_jni_exception_check_fn);
-  }
+  //static ByteSize pending_jni_exception_check_fn_offset() {
+  ////  return byte_offset_of(JavaThread, _pending_jni_exception_check_fn);
+  //}
 #if INCLUDE_ALL_GCS
   static ByteSize satb_mark_queue_offset()       { return byte_offset_of(JavaThread, _satb_mark_queue); }
   static ByteSize dirty_card_queue_offset()      { return byte_offset_of(JavaThread, _dirty_card_queue); }

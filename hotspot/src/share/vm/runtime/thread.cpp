@@ -2572,7 +2572,7 @@ void JavaThread::enable_stack_yellow_zone() {
   }
   enable_register_stack_guard();
 }
-void JavaThread::disable_stack_yellow_reserved_zone() {
+/*void JavaThread::disable_stack_yellow_reserved_zone() {
   assert(_stack_guard_state != stack_guard_unused, "must be using guard pages.");
   assert(_stack_guard_state != stack_guard_yellow_reserved_disabled, "already disabled");
 
@@ -2589,7 +2589,7 @@ void JavaThread::disable_stack_yellow_reserved_zone() {
     warning("Attempt to unguard stack yellow zone failed.");
   }
   disable_register_stack_guard();
-}
+}*/
 
 void JavaThread::disable_stack_yellow_zone() {
   assert(_stack_guard_state != stack_guard_unused, "must be using guard pages.");
