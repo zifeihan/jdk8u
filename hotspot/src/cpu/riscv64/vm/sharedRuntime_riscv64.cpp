@@ -1819,7 +1819,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   Label reguard;
   Label reguard_done;
   __ lbu(t0, Address(xthread, JavaThread::stack_guard_state_offset()));
-  __ mv(t1, JavaThread::stack_guard_yellow_reserved_disabled);
+  __ mv(t1, JavaThread::stack_guard_yellow_disabled);
   __ beq(t0, t1, reguard);
   __ bind(reguard_done);
 

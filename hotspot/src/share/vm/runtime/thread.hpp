@@ -916,8 +916,8 @@ class JavaThread: public Thread {
     stack_guard_unused,         // not needed
     stack_guard_yellow_disabled,// disabled (temporarily) after stack overflow
     stack_guard_enabled,         // enabled
-    stack_guard_yellow_reserved_disabled,// disabled (temporarily) after stack overflo
-    stack_guard_reserved_disabled
+    //stack_guard_yellow_reserved_disabled,// disabled (temporarily) after stack overflo
+    //stack_guard_reserved_disabled
   };
 
  private:
@@ -1323,22 +1323,22 @@ class JavaThread: public Thread {
     return _stack_shadow_zone_size;
   }*/
   //void enable_stack_reserved_zone();
-  inline bool stack_reserved_zone_disabled();
-  static size_t stack_reserved_zone_size() {
+  //inline bool stack_reserved_zone_disabled();
+  /*static size_t stack_reserved_zone_size() {
     // _stack_reserved_zone_size may be 0. This indicates the feature is off.
     return _stack_reserved_zone_size;
   }
   address stack_reserved_zone_base() {
     return (address)(stack_end() +
                      (stack_red_zone_size() + stack_yellow_zone_size() + stack_reserved_zone_size()));
-  }
-  bool in_stack_yellow_reserved_zone(address a) {
-    return (a <= stack_reserved_zone_base()) && (a >= stack_red_zone_base());
-  }
-  bool in_stack_reserved_zone(address a) {
+  }*/
+  //bool in_stack_yellow_reserved_zone(address a) {
+    //return (a <= stack_reserved_zone_base()) && (a >= stack_red_zone_base());
+  //}
+  /*bool in_stack_reserved_zone(address a) {
     return (a <= stack_reserved_zone_base()) &&
            (a >= (address)((intptr_t)stack_reserved_zone_base() - stack_reserved_zone_size()));
-   }
+   }*/
   void create_stack_guard_pages();
   void remove_stack_guard_pages();
 
@@ -1346,8 +1346,8 @@ class JavaThread: public Thread {
   void disable_stack_yellow_zone();
   void enable_stack_red_zone();
   void disable_stack_red_zone();
-  void disable_stack_yellow_reserved_zone();
-  void disable_stack_reserved_zone();
+  //void disable_stack_yellow_reserved_zone();
+  //void disable_stack_reserved_zone();
   /*void set_reserved_stack_activation(address addr) {
     assert(_reserved_stack_activation == stack_base()
             || _reserved_stack_activation == NULL
@@ -1359,9 +1359,9 @@ class JavaThread: public Thread {
   inline bool stack_yellow_zone_disabled();
   inline bool stack_yellow_zone_enabled();
 
-  static size_t stack_yellow_reserved_zone_size() {
-    return _stack_yellow_zone_size + _stack_reserved_zone_size;
-  }
+ // static size_t stack_yellow_reserved_zone_size() {
+   // return _stack_yellow_zone_size + _stack_reserved_zone_size;
+ // }
 
   // Attempt to reguard the stack after a stack overflow may have occurred.
   // Returns true if (a) guard pages are not needed on this thread, (b) the
