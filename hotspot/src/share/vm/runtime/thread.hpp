@@ -616,7 +616,7 @@ protected:
 
   static ByteSize stack_base_offset()            { return byte_offset_of(Thread, _stack_base ); }
   static ByteSize stack_size_offset()            { return byte_offset_of(Thread, _stack_size ); }
-  static ByteSize polling_page_offset()          { return byte_offset_of(Thread, _polling_page); }
+  //static ByteSize polling_page_offset()          { return byte_offset_of(Thread, _polling_page); }
 #define TLAB_FIELD_OFFSET(name) \
   static ByteSize tlab_##name##_offset()         { return byte_offset_of(Thread, _tlab) + ThreadLocalAllocBuffer::name##_offset(); }
 
@@ -1425,9 +1425,9 @@ class JavaThread: public Thread {
   static ByteSize should_post_on_exceptions_flag_offset() {
     return byte_offset_of(JavaThread, _should_post_on_exceptions_flag);
   }
-  static ByteSize pending_jni_exception_check_fn_offset() {
-    return byte_offset_of(JavaThread, _pending_jni_exception_check_fn);
-  }
+  //static ByteSize pending_jni_exception_check_fn_offset() {
+  ////  return byte_offset_of(JavaThread, _pending_jni_exception_check_fn);
+  //}
 #if INCLUDE_ALL_GCS
   static ByteSize satb_mark_queue_offset()       { return byte_offset_of(JavaThread, _satb_mark_queue); }
   static ByteSize dirty_card_queue_offset()      { return byte_offset_of(JavaThread, _dirty_card_queue); }
