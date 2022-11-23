@@ -84,12 +84,12 @@ int CompiledStaticCall::to_interp_stub_size() {
   return NativeFenceI::instruction_size() + 12 * NativeInstruction::instruction_size;
 }
 
-int CompiledStaticCall::to_trampoline_stub_size() {
+//int CompiledStaticCall::to_trampoline_stub_size() {
   // Somewhat pessimistically, we count four instructions here (although
   // there are only three) because we sometimes emit an alignment nop.
   // Trampoline stubs are always word aligned.
-  return NativeInstruction::instruction_size + NativeCallTrampolineStub::instruction_size;
-}
+ // return NativeInstruction::instruction_size + NativeCallTrampolineStub::instruction_size;
+//}
 
 // Relocation entries for call stub, compiled java to interpreter.
 int CompiledStaticCall::reloc_to_interp_stub() {

@@ -333,7 +333,7 @@ class CompiledStaticCall: public NativeCall {
 #endif
   static int to_interp_stub_size();
   static int reloc_to_interp_stub();
-  static int to_trampoline_stub_size();
+  //static int to_trampoline_stub_size();
  
   // State
   bool is_clean() const;
