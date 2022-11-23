@@ -333,7 +333,7 @@ class Thread: public ThreadShadow {
   // Returns the current thread
   static inline Thread* current();
   static inline Thread* current_or_null();
-  static inline Thread* current_or_null_safe();
+  //static inline Thread* current_or_null_safe();
 
   // Common thread operations
   static void set_priority(Thread* thread, ThreadPriority priority);
@@ -558,7 +558,7 @@ protected:
   size_t  stack_size() const           { return _stack_size; }
   void    set_stack_size(size_t size)  { _stack_size = size; }
   void    record_stack_base_and_size();
-  address stack_end()  const           { return stack_base() - stack_size(); }
+  //address stack_end()  const           { return stack_base() - stack_size(); }
 
   bool    on_local_stack(address adr) const {
     /* QQQ this has knowledge of direction, ought to be a stack method */
@@ -693,12 +693,12 @@ inline Thread* Thread::current_or_null() {
   }
   return NULL;
 }
-inline Thread* Thread::current_or_null_safe() {
+/*inline Thread* Thread::current_or_null_safe() {
   if (ThreadLocalStorage::is_initialized()) {
     return ThreadLocalStorage::thread();
   }
   return NULL;
-}
+}*/
 
 // Name support for threads.  non-JavaThread subclasses with multiple
 // uniquely named instances should derive from this.
