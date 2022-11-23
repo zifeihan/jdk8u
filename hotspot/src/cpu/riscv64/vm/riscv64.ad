@@ -1556,7 +1556,7 @@ const int Matcher::float_cmove_cost() {
   // float cmoves are no more expensive than int cmoves
   return 0;
 }
-
+const bool Matcher::clone_shift_expressions = false;
 // Does the CPU require late expand (see block.cpp for description of late expand)?
 const bool Matcher::require_postalloc_expand = false;
 
