@@ -1910,10 +1910,10 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     __ bind(done);
   }
 
-  if (CheckJNICalls) {
+  //if (CheckJNICalls) {
     // clear_pending_jni_exception_check
-    __ sd(zr, Address(xthread, JavaThread::pending_jni_exception_check_fn_offset()));
-  }
+   // __ sd(zr, Address(xthread, JavaThread::pending_jni_exception_check_fn_offset()));
+ // }
 
   if (!is_critical_native) {
     // reset handle block
