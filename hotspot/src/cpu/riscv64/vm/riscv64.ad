@@ -701,7 +701,7 @@ source_hpp %{
 
 #include "asm/macroAssembler.hpp"
 //#include "gc/shared/cardTable.hpp"
-//#include "gc/shared/cardTableBarrierSet.hpp"
+//#include "gc/shared/CardTableModRefBS.hpp"
 #include "gc_interface/collectedHeap.hpp"
 #include "opto/addnode.hpp"
 
@@ -1105,9 +1105,9 @@ void MachEpilogNode::emit(CodeBuffer &cbuf, PhaseRegAlloc *ra_) const {
 
   __ remove_frame(framesize);
 
- // if (StackReservedPages > 0 && C->has_reserved_stack_access()) {
+  //if (StackReservedPages > 0 && C->has_reserved_stack_access()) {
   //  __ reserved_stack_check();
- // }
+  //}
 
   if (do_polling() && C->is_method_compilation()) {
     __ read_polling_page(t0, os::get_polling_page(), relocInfo::poll_return_type);
@@ -1542,9 +1542,12 @@ const bool Matcher::pass_original_key_for_aes() {
 const bool Matcher::misaligned_vectors_ok() {
   return true;
 }
-const int Matcher::init_array_short_size = 4 * BytesPerLong;
+
 // false => size gets scaled to BytesPerLong, ok.
 const bool Matcher::init_array_count_is_in_bytes = false;
+
+// Threshold size for cleararray.
+const int Matcher::init_array_short_size = 4 * BytesPerLong;
 
 // Use conditional move (CMOVL)
 const int Matcher::long_cmove_cost() {
@@ -1556,9 +1559,14 @@ const int Matcher::float_cmove_cost() {
   // float cmoves are no more expensive than int cmoves
   return 0;
 }
-const bool Matcher::clone_shift_expressions = false;
+
 // Does the CPU require late expand (see block.cpp for description of late expand)?
 const bool Matcher::require_postalloc_expand = false;
+
+// Should the Matcher clone shifts on addressing modes, expecting them
+// to be subsumed into complex addressing expressions or compute them
+// into registers?  True for Intel but false for most RISCs
+const bool Matcher::clone_shift_expressions = false;
 
 // Do we need to mask the count passed to shift instructions or does
 // the cpu only look at the lower 5/6 bits anyway?
@@ -1586,8 +1594,8 @@ bool Matcher::narrow_klass_use_complex_address() {
 
 /*bool Matcher::const_oop_prefer_decode() {
   // Prefer ConN+DecodeN over ConP in simple compressed oops mode.
-  return Universe::narrow_oop_base() == NULL;
-}
+ // return Universe::narrow_oop_base() == NULL;
+//}
 
 bool Matcher::const_klass_prefer_decode() {
   // Prefer ConNKlass+DecodeNKlass over ConP in simple compressed klass mode.
@@ -1746,10 +1754,10 @@ bool Matcher::clone_address_expressions(AddPNode* m, Matcher::MStack& mstack, Ve
   }
   return false;
 }
-
-void Compile::reshape_address(AddPNode* addp) {
-}
 */
+//void Compile::reshape_address(AddPNode* addp) {
+//}
+
 %}
 
 
@@ -2020,7 +2028,7 @@ encode %{
   enc_class riscv64_enc_java_dynamic_call(method meth) %{
     MacroAssembler _masm(&cbuf);
     //int method_index = resolved_method_index(cbuf);
-   // address call = __ ic_call((address)$meth$$method, method_index);
+    //address call = __ ic_call((address)$meth$$method, method_index);
     address call = __ ic_call((address)$meth$$method);
     if (call == NULL) {
       ciEnv::current()->record_failure("CodeCache is full");
@@ -2646,8 +2654,10 @@ operand immPollPage()
 operand immByteMapBase()
 %{
   // Get base of card map
-  predicate(BarrierSetRv::barrier_set()->is_a(BarrierSetRv::CardTableBarrierSet) &&
-            (jbyte*)n->get_ptr() == ((CardTableBarrierSet*)(BarrierSetRv::barrier_set()))->card_table()->byte_map_base());
+  //predicate(BarrierSet::barrier_set()->is_a(BarrierSet::CardTableModRefBS) &&
+   //         (jbyte*)n->get_ptr() == ((CardTableModRefBS*)(BarrierSet::barrier_set()))->card_table()->byte_map_base());
+  predicate((jbyte*)n->get_ptr() ==
+	((CardTableModRefBS*)(Universe::heap()->barrier_set()))->byte_map_base);
   match(ConP);
 
   op_cost(0);
@@ -2784,7 +2794,7 @@ operand immF0()
 
 operand immIOffset()
 %{
-  predicate(is_imm_in_range(n->get_int(), 12, 0));
+  predicate(Assembler::is_imm_in_range(n->get_int(), 12, 0));
   match(ConI);
   op_cost(0);
   format %{ %}
@@ -2793,7 +2803,7 @@ operand immIOffset()
 
 operand immLOffset()
 %{
-  predicate(is_imm_in_range(n->get_long(), 12, 0));
+  predicate(Assembler::is_imm_in_range(n->get_long(), 12, 0));
   match(ConL);
   op_cost(0);
   format %{ %}
@@ -6155,89 +6165,13 @@ instruct mulD_reg_reg(fRegD dst, fRegD src1, fRegD src2) %{
   ins_pipe(fp_dop_reg_reg_d);
 %}
 
-// src1 * src2 + src3
 
 
-// src1 * src2 + src3
-instruct maddD_reg_reg(fRegD dst, fRegD src1, fRegD src2, fRegD src3) %{
-  predicate(UseFMA);
-  match(Set dst (FmaD src3 (Binary src1 src2)));
-
-  ins_cost(FMUL_DOUBLE_COST);
-  format %{ "fmadd.d  $dst, $src1, $src2, $src3\t#@maddD_reg_reg" %}
-
-  ins_encode %{
-    __ fmadd_d(as_FloatRegister($dst$$reg),
-               as_FloatRegister($src1$$reg),
-               as_FloatRegister($src2$$reg),
-               as_FloatRegister($src3$$reg));
-  %}
-
-  ins_pipe(pipe_class_default);
-%}
-
-// src1 * src2 - src3
 
 
-// src1 * src2 - src3
-instruct msubD_reg_reg(fRegD dst, fRegD src1, fRegD src2, fRegD src3) %{
-  predicate(UseFMA);
-  match(Set dst (FmaD (NegD src3) (Binary src1 src2)));
-
-  ins_cost(FMUL_DOUBLE_COST);
-  format %{ "fmsub.d  $dst, $src1, $src2, $src3\t#@msubD_reg_reg" %}
-
-  ins_encode %{
-    __ fmsub_d(as_FloatRegister($dst$$reg),
-               as_FloatRegister($src1$$reg),
-               as_FloatRegister($src2$$reg),
-               as_FloatRegister($src3$$reg));
-  %}
-
-  ins_pipe(pipe_class_default);
-%}
-
-// -src1 * src2 + src3
 
 
-// -src1 * src2 + src3
-instruct nmsubD_reg_reg(fRegD dst, fRegD src1, fRegD src2, fRegD src3) %{
-  predicate(UseFMA);
-  match(Set dst (FmaD src3 (Binary (NegD src1) src2)));
-  match(Set dst (FmaD src3 (Binary src1 (NegD src2))));
 
-  ins_cost(FMUL_DOUBLE_COST);
-  format %{ "fnmsub.d  $dst, $src1, $src2, $src3\t#@nmsubD_reg_reg" %}
-
-  ins_encode %{
-    __ fnmsub_d(as_FloatRegister($dst$$reg),
-                as_FloatRegister($src1$$reg),
-                as_FloatRegister($src2$$reg),
-                as_FloatRegister($src3$$reg));
-  %}
-
-  ins_pipe(pipe_class_default);
-%}
-
-
-// -src1 * src2 - src3
-instruct nmaddD_reg_reg(fRegD dst, fRegD src1, fRegD src2, fRegD src3) %{
-  predicate(UseFMA);
-  match(Set dst (FmaD (NegD src3) (Binary (NegD src1) src2)));
-  match(Set dst (FmaD (NegD src3) (Binary src1 (NegD src2))));
-
-  ins_cost(FMUL_DOUBLE_COST);
-  format %{ "fnmadd.d  $dst, $src1, $src2, $src3\t#@nmaddD_reg_reg" %}
-
-  ins_encode %{
-    __ fnmadd_d(as_FloatRegister($dst$$reg),
-                as_FloatRegister($src1$$reg),
-                as_FloatRegister($src2$$reg),
-                as_FloatRegister($src3$$reg));
-  %}
-
-  ins_pipe(pipe_class_default);
-%}
 
 instruct divF_reg_reg(fRegF dst, fRegF src1, fRegF src2) %{
   match(Set dst (DivF src1  src2));
@@ -8870,7 +8804,7 @@ instruct partialSubtypeCheckVsZero(iRegP_R14 sub, iRegP_R10 super, iRegP_R12 tem
   ins_pipe(pipe_class_memory);
 %}
 
-instruct string_compareU(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_R14 cnt2,
+/*instruct string_compareU(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_R14 cnt2,
                          iRegI_R10 result, iRegP_R28 tmp1, iRegL_R29 tmp2, iRegL_R30 tmp3, iRegL_R6 cr)
 %{
   predicate(((StrCompNode *)n)->encoding() == StrIntrinsicNode::UU);
@@ -8938,7 +8872,7 @@ instruct string_compareLU(iRegP_R11 str1, iRegI_R12 cnt1, iRegP_R13 str2, iRegI_
                       StrIntrinsicNode::LU);
   %}
   ins_pipe(pipe_class_memory);
-%}
+%}*/
 
 // clearing of an array
 instruct clearArray_reg_reg(iRegL_R29 cnt, iRegP_R28 base, Universe dummy, iRegL_R6 cr)
@@ -8973,7 +8907,7 @@ instruct clearArray_imm_reg(immL cnt, iRegP_R28 base, Universe dummy, iRegL_R6 c
   ins_pipe(pipe_class_memory);
 %}
 
-instruct string_equalsL(iRegP_R11 str1, iRegP_R13 str2, iRegI_R14 cnt,
+/*instruct string_equalsL(iRegP_R11 str1, iRegP_R13 str2, iRegI_R14 cnt,
                         iRegI_R10 result, iRegL_R6 cr)
 %{
   predicate(((StrEqualsNode*)n)->encoding() == StrIntrinsicNode::LL);
@@ -9038,7 +8972,7 @@ instruct array_equalsC(iRegP_R11 ary1, iRegP_R12 ary2, iRegI_R10 result,
   %}
   ins_pipe(pipe_class_memory);
 %}
-
+*/
 // ============================================================================
 // Safepoint Instructions
 
