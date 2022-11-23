@@ -205,7 +205,7 @@ class SharedRuntime: AllStatic {
   //static void enable_stack_reserved_zone(JavaThread* thread);
   // Shared stub locations
   static address get_poll_stub(address pc);
-  static frame look_for_reserved_stack_annotated_method(JavaThread* thread, frame fr);
+  //static frame look_for_reserved_stack_annotated_method(JavaThread* thread, frame fr);
 
   static address get_ic_miss_stub() {
     assert(_ic_miss_blob!= NULL, "oops");
@@ -382,7 +382,7 @@ class SharedRuntime: AllStatic {
   static int c_calling_convention(const BasicType *sig_bt, VMRegPair *regs, VMRegPair *regs2,
                                   int total_args_passed);
   static size_t trampoline_size();
-  static void generate_trampoline(MacroAssembler *masm, address destination);
+  //static void generate_trampoline(MacroAssembler *masm, address destination);
 
   // Compute the new number of arguments in the signature if 32 bit ints
   // must be converted to longs. Needed if CCallingConventionRequiresIntsAsLongs
@@ -399,7 +399,7 @@ class SharedRuntime: AllStatic {
                               const BasicType *sig_bt,
                               const VMRegPair *regs);
 
-  /*static nmethod* generate_native_wrapper(MacroAssembler* masm,
+ /* static nmethod* generate_native_wrapper(MacroAssembler* masm,
                                           const methodHandle& method,
                                           int compile_id,
                                           BasicType* sig_bt,
