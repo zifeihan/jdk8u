@@ -825,7 +825,7 @@ class os: AllStatic {
 
   // Hook for os specific jvm options that we don't want to abort on seeing
   static bool obsolete_option(const JavaVMOption *option);
-  static int extra_bang_size_in_bytes();
+ // static int extra_bang_size_in_bytes();
 
   // Extensions
 #include "runtime/os_ext.hpp"
