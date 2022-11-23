@@ -624,7 +624,8 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
     if (ProfileInterpreter && profile_method != NULL) {
       // Test to see if we should create a method data oop
       __ ld(t1, Address(xmethod, Method::method_counters_offset()));
-      __ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
+      //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
+      __ lwu(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit)); 
       __ blt(x10, t1, *profile_method_continue);
 
       // if no method data exists, go to profile_method
@@ -633,7 +634,8 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
 
     {
       __ ld(t1, Address(xmethod, Method::method_counters_offset()));
-      __ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_invocation_limit_offset())));
+      //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_invocation_limit_offset())));
+      __ lwu(t1, ExternalAddress((address) &InvocationCounter::InterpreterInvocationLimit)); 
       __ bltu(x10, t1, done);
       __ j(*overflow); // offset is too large so we have to use j instead of bgeu here
     }
