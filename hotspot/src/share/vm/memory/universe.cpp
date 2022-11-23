@@ -131,7 +131,7 @@ oop Universe::_arithmetic_exception_instance          = NULL;
 oop Universe::_virtual_machine_error_instance         = NULL;
 oop Universe::_vm_exception                           = NULL;
 oop Universe::_allocation_context_notification_obj    = NULL;
-oop Universe::_the_null_sentinel                      = NULL;
+//oop Universe::_the_null_sentinel                      = NULL;
 
 Array<int>* Universe::_the_empty_int_array            = NULL;
 Array<u2>* Universe::_the_empty_short_array           = NULL;
