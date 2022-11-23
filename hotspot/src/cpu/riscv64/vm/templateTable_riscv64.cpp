@@ -2032,7 +2032,8 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
         if (UseOnStackReplacement) {
           // check for overflow against x10, which is the sum of the
           // counters
-          __ lwu(t0, Address(t1, in_bytes(MethodCounters::interpreter_backward_branch_limit_offset())));
+          //__ lwu(t0, Address(t1, in_bytes(MethodCounters::interpreter_backward_branch_limit_offset())));
+          __ lwu(t0, ExternalAddress((address) &InvocationCounter::InterpreterBackwardBranchLimit));
           __ bgeu(x10, t0, backedge_counter_overflow); // Intel == Assembler::aboveEqual
         }
       }
