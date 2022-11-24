@@ -26,7 +26,7 @@
 
 #include "precompiled.hpp"
 #include "asm/macroAssembler.inline.hpp"
-#include "barrierSetAssembler_riscv64.hpp"
+//#include "barrierSetAssembler_riscv64.hpp"
 #include "interp_masm_riscv64.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
