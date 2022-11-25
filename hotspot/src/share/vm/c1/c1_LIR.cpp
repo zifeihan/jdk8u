@@ -2059,6 +2059,10 @@ void LIR_Op1::print_patch_code(outputStream* out, LIR_PatchCode code) {
 // LIR_OpBranch
 void LIR_OpBranch::print_instr(outputStream* out) const {
   print_condition(out, cond());             out->print(" ");
+#ifdef NO_FLAG_REG
+  in_opr1()->print(out); out->print(" ");
+  in_opr2()->print(out); out->print(" ");
+#endif
   if (block() != NULL) {
     out->print("[B%d] ", block()->block_id());
   } else if (stub() != NULL) {
@@ -2145,7 +2149,11 @@ void LIR_OpRoundFP::print_instr(outputStream* out) const {
 
 // LIR_Op2
 void LIR_Op2::print_instr(outputStream* out) const {
-  if (code() == lir_cmove) {
+#ifndef NO_FLAG_REG
+  if (code() == lir_cmove || code() == lir_cmp) {
+#else
+  if (code() == lir_branch || code() == lir_cond_float_branch) {
+#endif
     print_condition(out, condition());         out->print(" ");
   }
   in_opr1()->print(out);    out->print(" ");
