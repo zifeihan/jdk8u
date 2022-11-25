@@ -1253,12 +1253,19 @@ void LinearScan::add_register_hints(LIR_Op* op) {
       break;
     }
     case lir_cmove: {
+#ifndef NO_FLAG_REG
       assert(op->as_Op2() != NULL, "lir_cmove must be LIR_Op2");
       LIR_Op2* cmove = (LIR_Op2*)op;
 
       LIR_Opr move_from = cmove->in_opr1();
       LIR_Opr move_to = cmove->result_opr();
+#else
+      assert(op->as_Op4() != NULL, "lir_cmove must be LIR_Op4");
+      LIR_Op4* cmove = (LIR_Op4*)op;
 
+      LIR_Opr move_from = cmove->in_opr3();
+      LIR_Opr move_to   = cmove->in_opr4();
+#endif
       if (move_to->is_register() && move_from->is_register()) {
         Interval* from = interval_at(reg_num(move_from));
         Interval* to = interval_at(reg_num(move_to));
