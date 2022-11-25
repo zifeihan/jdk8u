@@ -194,7 +194,43 @@ char LIR_OprDesc::type_char(BasicType t) {
       return '?';
   }
 }
+#ifdef NO_FLAG_REG
+bool LIR_OprDesc::has_common_register(LIR_Opr opr) const {
 
+  if (!(is_register() && opr->is_register())) {
+    return false;
+  }
+
+  if (is_single_cpu()) {
+    Register dst = as_register();
+    if (opr->is_single_cpu()) {
+      return dst == opr->as_register();
+    } else if (opr->is_double_cpu()) {
+      return dst == opr->as_register_lo();
+    }
+  } else if (is_double_cpu()) {
+    Register dst_lo = as_register_lo();
+    if (opr->is_single_cpu()) {
+      return dst_lo == opr->as_register();
+    } else if (opr->is_double_cpu()) {
+      return dst_lo == opr->as_register_lo();
+    }
+  } else if (is_single_fpu()) {
+    if (opr->is_single_fpu()) {
+      return as_float_reg() == opr->as_float_reg();
+    } else if (opr->is_double_fpu()) {
+      return as_float_reg() == opr->as_double_reg();
+    }
+  } else if (is_double_fpu()) {
+    if (opr->is_single_fpu()) {
+      return as_double_reg() == opr->as_float_reg();
+    }else if (opr->is_double_fpu()) {
+     return as_double_reg() == opr->as_double_reg();
+    }
+  }
+  return false;
+}
+#endif
 #ifndef PRODUCT
 void LIR_OprDesc::validate_type() const {
 
