@@ -6032,7 +6032,15 @@ void EdgeMoveOptimizer::optimize_moves_at_block_begin(BlockBegin* block) {
         return;
       }
     }
-
+#ifdef NO_FLAG_REG
+    // Some platforms, such as riscv64, s390 and aarch64, the branch instruction may contain register operands.
+    // If the move instruction would change the branch instruction's operand after the optimization, we can't apply it.
+    if (branch->as_Op2() != NULL) {
+      LIR_Op2* branch_op2 = (LIR_Op2*)branch;
+      if (op->result_opr()->has_common_register(branch_op2->in_opr1())) return;
+      if (op->result_opr()->has_common_register(branch_op2->in_opr2())) return;
+    }
+#endif
     TRACE_LINEAR_SCAN(4, tty->print("----- found instruction that is equal in all %d successors: ", num_sux); op->print());
 
     // insert instruction at end of current block
