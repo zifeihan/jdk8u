@@ -2784,10 +2784,10 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
       generate_throw_exception("StackOverflowError throw_exception",
                                CAST_FROM_FN_PTR(address,
                                                 SharedRuntime::throw_StackOverflowError));
-    StubRoutines::_throw_delayed_StackOverflowError_entry =
-      generate_throw_exception("delayed StackOverflowError throw_exception",
-                               CAST_FROM_FN_PTR(address,
-                                                SharedRuntime::throw_delayed_StackOverflowError));
+   // StubRoutines::_throw_delayed_StackOverflowError_entry =
+     // generate_throw_exception("delayed StackOverflowError throw_exception",
+       //                        CAST_FROM_FN_PTR(address,
+         //                                       SharedRuntime::throw_delayed_StackOverflowError));
   }
 
   void generate_all() {
