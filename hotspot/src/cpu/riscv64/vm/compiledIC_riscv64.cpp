@@ -158,7 +158,7 @@ void CompiledStaticCall::verify() {
   // Creation also verifies the object.
 //  NativeMovConstReg* method_holder
  //   = nativeMovConstReg_at(stub + NativeFenceI::instruction_size());
-  NativeMovConstReg* method_holder = nativeMovConstReg_at(stub);
+   NativeMovConstReg* method_holder = nativeMovConstReg_at(stub);
   NativeJump* jump = nativeJump_at(method_holder->next_instruction_address());
 
   // Verify state.
