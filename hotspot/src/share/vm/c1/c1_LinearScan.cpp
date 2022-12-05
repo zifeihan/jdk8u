@@ -6248,10 +6248,20 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
 
             if (prev_branch->stub() == NULL) {
 
+#ifndef NO_FLAG_REG
               LIR_Op2* prev_cmp = NULL;
+              // There might be a cmove inserted for profiling which depends on the same
+              // compare. If we change the condition of the respective compare, we have
+              // to take care of this cmove as well.
+              LIR_Op2* prev_cmove = NULL;
 
               for(int j = instructions->length() - 3; j >= 0 && prev_cmp == NULL; j--) {
                 prev_op = instructions->at(j);
+                if (prev_op->code() == lir_cmove) {
+                  assert(prev_op->as_Op2() != NULL, "cmove must be of type LIR_Op2");
+                  prev_cmove = (LIR_Op2*)prev_op;
+                  assert(prev_branch->cond() == prev_cmove->condition(), "should be the same");
+                }
                 if (prev_op->code() == lir_cmp) {
                   assert(prev_op->as_Op2() != NULL, "branch must be of type LIR_Op2");
                   prev_cmp = (LIR_Op2*)prev_op;
@@ -6259,6 +6269,7 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
                 }
               }
               assert(prev_cmp != NULL, "should have found comp instruction for branch");
+#endif
               if (prev_branch->block() == code->at(i + 1) && prev_branch->info() == NULL) {
 
                 TRACE_LINEAR_SCAN(3, tty->print_cr("Negating conditional branch and deleting unconditional branch at end of block B%d", block->block_id()));
@@ -6266,8 +6277,19 @@ void ControlFlowOptimizer::delete_unnecessary_jumps(BlockList* code) {
                 // eliminate a conditional branch to the immediate successor
                 prev_branch->change_block(last_branch->block());
                 prev_branch->negate_cond();
+#ifndef NO_FLAG_REG
                 prev_cmp->set_condition(prev_branch->cond());
+#endif
                 instructions->truncate(instructions->length() - 1);
+#ifndef NO_FLAG_REG
+                // if we do change the condition, we have to change the cmove as well
+                if (prev_cmove != NULL) {
+                  prev_cmove->set_condition(prev_branch->cond());
+                  LIR_Opr t = prev_cmove->in_opr1();
+                  prev_cmove->set_in_opr1(prev_cmove->in_opr2());
+                  prev_cmove->set_in_opr2(t);
+                }
+#endif
               }
             }
           }
@@ -6574,7 +6596,9 @@ void LinearScanStatistic::collect(LinearScan* allocator) {
           break;
         }
 
+#ifndef NO_FLAG_REG
         case lir_cmp:             inc_counter(counter_cmp); break;
+#endif
 
         case lir_branch:
         case lir_cond_float_branch: {
