@@ -925,8 +925,10 @@ enum LIR_Code {
       , lir_return
       , lir_leal
       , lir_neg
+#ifndef NO_FLAG_REG
       , lir_branch
       , lir_cond_float_branch
+#endif
       , lir_move
       , lir_prefetchr
       , lir_prefetchw
@@ -940,11 +942,17 @@ enum LIR_Code {
       , lir_unwind
   , end_op1
   , begin_op2
+#ifdef NO_FLAG_REG
+      , lir_branch
+      , lir_cond_float_branch
+#endif
       , lir_cmp
       , lir_cmp_l2i
       , lir_ucmp_fd2i
       , lir_cmp_fd2i
+#ifndef NO_FLAG_REG
       , lir_cmove
+#endif
       , lir_add
       , lir_sub
       , lir_mul
@@ -977,6 +985,11 @@ enum LIR_Code {
       , lir_idiv
       , lir_irem
   , end_op3
+#ifdef NO_FLAG_REG
+  , begin_op4
+      , lir_cmove
+  , end_op4
+#endif
   , begin_opJavaCall
       , lir_static_call
       , lir_optvirtual_call
@@ -1889,7 +1902,7 @@ class LIR_Op3: public LIR_Op {
   virtual void print_instr(outputStream* out) const PRODUCT_RETURN;
 };
 
-
+#ifdef NO_FLAG_REG
 class LIR_Op4: public LIR_Op {
   friend class LIR_OpVisitState;
  protected:
@@ -1945,7 +1958,7 @@ class LIR_Op4: public LIR_Op {
 
   virtual void print_instr(outputStream* out) const PRODUCT_RETURN;
 };
-
+#endif
 
 //--------------------------------
 class LabelObj: public CompilationResourceObj {
