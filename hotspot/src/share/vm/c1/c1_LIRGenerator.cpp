@@ -2466,7 +2466,7 @@ void LIRGenerator::do_UnsafeGetObject(UnsafeGetObject* x) {
         }
         __ cmp(lir_cond_notEqual, off.result(), referent_off);
         //__ branch(lir_cond_notEqual, as_BasicType(off.type()), Lcont->label());
-        __ branch(lir_cond_equal, NO_FLAGREG_ONLY_ARG(value) NO_FLAGREG_ONLY_ARG(LIR_OprFact::intConst(NULL))
+        __ branch(lir_cond_equal, NO_FLAGREG_ONLY_ARG(off.result()) NO_FLAGREG_ONLY_ARG(referent_off)
                 as_BasicType(off.type()), Lcont->label());
       }
       if (gen_source_check) {
@@ -2474,7 +2474,7 @@ void LIRGenerator::do_UnsafeGetObject(UnsafeGetObject* x) {
         // if (source == null) -> continue
         __ cmp(lir_cond_equal, src_reg, LIR_OprFact::oopConst(NULL));
         //__ branch(lir_cond_equal, T_OBJECT, Lcont->label());
-        __ branch(lir_cond_equal, NO_FLAGREG_ONLY_ARG(value) NO_FLAGREG_ONLY_ARG(LIR_OprFact::intConst(NULL))
+        __ branch(lir_cond_equal, NO_FLAGREG_ONLY_ARG(src_reg) NO_FLAGREG_ONLY_ARG(LIR_OprFact::intConst(NULL))
                 T_INT, Lcont->label());
       }
       LIR_Opr src_klass = new_register(T_METADATA);
@@ -2487,7 +2487,7 @@ void LIRGenerator::do_UnsafeGetObject(UnsafeGetObject* x) {
         __ move(reference_type_addr, reference_type);
         __ cmp(lir_cond_equal, reference_type, LIR_OprFact::intConst(REF_NONE));
         //__ branch(lir_cond_equal, T_INT, Lcont->label());
-        __ branch(lir_cond_equal, NO_FLAGREG_ONLY_ARG(value) NO_FLAGREG_ONLY_ARG(LIR_OprFact::intConst(REF_NONE))
+        __ branch(lir_cond_equal, NO_FLAGREG_ONLY_ARG(reference_type) NO_FLAGREG_ONLY_ARG(LIR_OprFact::intConst(REF_NONE))
                 T_INT, Lcont->label());
       }
       {
