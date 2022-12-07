@@ -299,7 +299,7 @@ bool LIR_OprDesc::is_oop() const {
 void LIR_Op2::verify() const {
 #ifdef ASSERT
   switch (code()) {
-    case lir_cmove:
+    HAS_FLAGREG_ONLY(case lir_cmove:)
     case lir_xchg:
       break;
 
