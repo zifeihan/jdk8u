@@ -1982,7 +1982,6 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen)
     {EM_AARCH64,     EM_AARCH64, ELFCLASS64, ELFDATA2LSB, (char*)"AARCH64"},
     {EM_RISCV,       EM_RISCV,   ELFCLASSNONE, ELFDATA2MSB, (char*)"RISCV"},
   };
-#define RISCV
   #if  (defined IA32)
     static  Elf32_Half running_arch_code=EM_386;
   #elif   (defined AMD64)
@@ -2013,11 +2012,11 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen)
     static  Elf32_Half running_arch_code=EM_68K;
   #elif  (defined AARCH64)
     static  Elf32_Half running_arch_code=EM_AARCH64;
-  #elif  (defined RISCV)
+  #elif  (defined __riscv)
     static  Elf32_Half running_arch_code=EM_RISCV;
   #else
     #error Method os::dll_load requires that one of following is defined:\
-         IA32, AMD64, IA64, __sparc, __powerpc__, ARM, S390, ALPHA, MIPS, MIPSEL, PARISC, M68K, AARCH64, RISCV
+         IA32, AMD64, IA64, __sparc, __powerpc__, ARM, S390, ALPHA, MIPS, MIPSEL, PARISC, M68K, AARCH64, __riscv
   #endif
 
   // Identify compatability class for VM's architecture and library's architecture
