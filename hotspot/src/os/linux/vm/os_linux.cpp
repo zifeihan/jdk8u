@@ -2050,12 +2050,10 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen)
   }
 
 #ifndef S390
-#ifndef __riscv
   if (lib_arch.elf_class != arch_array[running_arch_index].elf_class) {
     ::snprintf(diag_msg_buf, diag_msg_max_length-1," (Possible cause: architecture word width mismatch)");
     return NULL;
   }
-#endif // __riscv
 #endif // !S390
 
   if (lib_arch.compat_class != arch_array[running_arch_index].compat_class) {
