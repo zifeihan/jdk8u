@@ -1980,9 +1980,8 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen)
     {EM_PARISC,      EM_PARISC,  ELFCLASS32, ELFDATA2MSB, (char*)"PARISC"},
     {EM_68K,         EM_68K,     ELFCLASS32, ELFDATA2MSB, (char*)"M68k"},
     {EM_AARCH64,     EM_AARCH64, ELFCLASS64, ELFDATA2LSB, (char*)"AARCH64"},
-    {EM_RISCV,       EM_RISCV,   ELFCLASSNONE, ELFDATA2MSB, (char*)"RISC-V"},
+    {EM_RISCV,       EM_RISCV,   ELFCLASSNONE, ELFDATA2MSB, (char*)"RISCV"},
   };
-
   #if  (defined IA32)
     static  Elf32_Half running_arch_code=EM_386;
   #elif   (defined AMD64)
