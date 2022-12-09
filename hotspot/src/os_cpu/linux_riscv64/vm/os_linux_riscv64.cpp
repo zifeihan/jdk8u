@@ -344,12 +344,7 @@ JVM_handle_linux_signal(int sig,
     }
   }
 
-#ifdef CAN_SHOW_REGISTERS_ON_ASSERT
-  if ((sig == SIGSEGV || sig == SIGBUS) && info != NULL && info->si_addr == g_assert_poison) {
-    handle_assert_poison_fault(ucVoid, info->si_addr);
-    return 1;
-  }
-#endif
+
 
   JavaThread* thread = NULL;
   VMThread* vmthread = NULL;
@@ -377,6 +372,15 @@ JVM_handle_linux_signal(int sig,
       return 1;
     }
 
+#ifndef AMD64
+    // Halt if SI_KERNEL before more crashes get misdiagnosed as Java bugs
+    // This can happen in any running code (currently more frequently in
+    // interpreter code but has been seen in compiled code)
+    if (sig == SIGSEGV && info->si_addr == 0 && info->si_code == SI_KERNEL) {
+      fatal("An irrecoverable SI_KERNEL SIGSEGV has occurred due "
+            "to unstable signal handling in this distribution.");
+    }
+#endif // AMD64
     // Handle ALL stack overflow variations here
     if (sig == SIGSEGV) {
       address addr = (address) info->si_addr;
@@ -448,8 +452,7 @@ JVM_handle_linux_signal(int sig,
         CodeBlob* cb = CodeCache::find_blob_unsafe(pc);
         nmethod* nm = (cb != NULL && cb->is_nmethod()) ? (nmethod*)cb : NULL;
         if (nm != NULL && nm->has_unsafe_access()) {
-          address next_pc = pc + NativeCall::instruction_size;
-          stub = handle_unsafe_access(thread, next_pc);
+          stub = handle_unsafe_access(thread, pc);
         }
       } else if (sig == SIGFPE  &&
           (info->si_code == FPE_INTDIV || info->si_code == FPE_FLTDIV)) {
@@ -467,8 +470,7 @@ JVM_handle_linux_signal(int sig,
     } else if (thread->thread_state() == _thread_in_vm &&
                sig == SIGBUS && /* info->si_code == BUS_OBJERR && */
                thread->doing_unsafe_access()) {
-      address next_pc = pc + NativeCall::instruction_size;
-      stub = handle_unsafe_access(thread, next_pc);
+        stub = handle_unsafe_access(thread, pc);
     }
 
     // jni_fast_Get<Primitive>Field can trap at certain pc's if a GC kicks in
@@ -643,8 +645,6 @@ void os::print_context(outputStream *st, void *context) {
   // point to garbage if entry point in an nmethod is corrupted. Leave
   // this at the end, and hope for the best.
   address pc = os::Linux::ucontext_get_pc(uc);
- // print_instructions(st, pc, sizeof(char));
- // st->cr();
   st->print_cr("Instructions: (pc=" PTR_FORMAT ")", p2i(pc));
   print_hex_dump(st, pc - 32, pc + 32, sizeof(char));
 }
@@ -680,7 +680,7 @@ void os::verify_stack_alignment() {
 #endif
 
 ///int os::extra_bang_size_in_bytes() {
-////  return 0;
+ // return 0;
 //}
 
 extern "C" {
