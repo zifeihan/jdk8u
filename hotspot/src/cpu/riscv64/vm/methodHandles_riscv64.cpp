@@ -69,7 +69,7 @@ void MethodHandles::verify_klass(MacroAssembler* _masm,
                                  const char* error_message) {
   assert_cond(_masm != NULL);
   Klass** klass_addr = SystemDictionary::well_known_klass_addr(klass_id);
-  Klass* klass = SystemDictionary::well_known_klass(klass_id);
+  KlassHandle klass = SystemDictionary::well_known_klass(klass_id);
   Register temp = t1;
   Register temp2 = t0; // used by MacroAssembler::cmpptr
   Label L_ok, L_bad;
