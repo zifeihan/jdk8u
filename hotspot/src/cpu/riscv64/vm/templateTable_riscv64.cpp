@@ -897,7 +897,6 @@ void TemplateTable::iaload()
   __ add(x11, x11, arrayOopDesc::base_offset_in_bytes(T_INT) >> 2);
   __ slli(t0, x11, 2);
   __ add(t0, t0, x10);
-  __ mv(t0, t0);
   __ access_load_at(T_INT, IN_HEAP | IS_ARRAY, x10, Address(t0), noreg, noreg);
   //__ lea(x11, Address(x10, x11, Address::uxtw(2)));
   //__ lwu(x10, Address(x11, arrayOopDesc::base_offset_in_bytes(T_INT)));
@@ -2647,7 +2646,6 @@ void TemplateTable::load_field_cp_cache_entry(Register obj,
     const int mirror_offset = in_bytes(Klass::java_mirror_offset());
     __ ld(obj, Address(obj, mirror_offset));
     //__ resolve_oop_handle(obj);
-   // __ access_load_at(T_OBJECT, IN_NATIVE, obj, Address(obj, 0), noreg, noreg);
 }
   
 }
@@ -3700,7 +3698,6 @@ void TemplateTable::invokevirtual_helper(Register index,
   __ jump_from_interpreted(method);
 
   __ bind(notFinal);
-  __ addi(recv,recv,0);
   // get receiver klass
   __ null_check(recv, oopDesc::klass_offset_in_bytes());
   __ load_klass(x10, recv);
