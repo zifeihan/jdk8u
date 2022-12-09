@@ -1924,7 +1924,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
       // It is safe to examine both src.length and dst.length.
       arraycopy_range_checks(src, src_pos, dst, dst_pos, scratch_length,
                              t2, L_failed);
-const Register dst_klass = t1;
+      const Register dst_klass = t1;
       __ load_klass(dst_klass, dst); // reload
 
       // Marshal the base address arguments now, freeing registers.
