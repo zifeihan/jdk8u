@@ -1684,7 +1684,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     }
 
     // Load (object->mark() | 1) into swap_reg % x10
-    __ ld(t0, Address(obj_reg, oopDesc::mark_offset_in_bytes()));
+    __ ld(t0, Address(obj_reg, 0));
     __ ori(swap_reg, t0, 1);
 
     // Save (object->mark() | 1) into BasicLock's displaced header
@@ -1803,7 +1803,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   Label safepoint_in_progress, safepoint_in_progress_done;
   {
     assert(SafepointSynchronize::_not_synchronized == 0, "fix this code");
-    int32_t offset;
+    int32_t offset=0;
     //__ safepoint_poll_acquire(safepoint_in_progress);
     __ la_patchable(t0,
             ExternalAddress((address)SafepointSynchronize::address_of_state()),
@@ -2273,7 +2273,6 @@ void SharedRuntime::generate_deopt_blob() {
   }
 #endif // ASSERT
   __ mv(c_rarg0, xthread);
-  __ mv(c_rarg1, xcpool);
   int32_t offset = 0;
   __ la_patchable(t0, RuntimeAddress(CAST_FROM_FN_PTR(address, Deoptimization::fetch_unroll_info)), offset);
   __ jalr(x1, t0, offset);
@@ -2288,7 +2287,7 @@ void SharedRuntime::generate_deopt_blob() {
   // Load UnrollBlock* into x15
   __ mv(x15, x10);
 
-  __ lwu(xcpool, Address(x15, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
+  //__ lwu(xcpool, Address(x15, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
   Label noException;
   __ li(t0, Deoptimization::Unpack_exception);
   __ bne(xcpool, t0, noException); // Was exception pending?
@@ -2484,7 +2483,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   // n.b. 3 gp args, 0 fp args, integral return type
 
   __ mv(c_rarg0, xthread);
-  __ mvw(c_rarg2, (unsigned)Deoptimization::Unpack_uncommon_trap);
+  //__ mvw(c_rarg2, (unsigned)Deoptimization::Unpack_uncommon_trap);
   int32_t offset = 0;
   __ la_patchable(t0,
         RuntimeAddress(CAST_FROM_FN_PTR(address,
@@ -2506,7 +2505,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   // move UnrollBlock* into x14
   __ mv(x14, x10);
 
-#ifdef ASSERT
+/*#ifdef ASSERT
   { Label L;
     __ lwu(t0, Address(x14, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
     __ mvw(t1, Deoptimization::Unpack_uncommon_trap);
@@ -2514,7 +2513,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
     __ stop("SharedRuntime::generate_deopt_blob: last_Java_fp not cleared");
     __ bind(L);
   }
-#endif
+#endif*/
 
   // Pop all the frames we must move/replace.
   //
@@ -2536,7 +2535,6 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   __ addi(sp, sp, 2 * wordSize);
   // LR should now be the return address to the caller (3) frame
 
-#ifdef ASSERT
   // Compilers generate code that bang the stack by as much as the
   // interpreter would need. So this stack banging should never
   // trigger a fault. Verify that it does not on non product builds.
@@ -2546,7 +2544,6 @@ void SharedRuntime::generate_uncommon_trap_blob() {
                         total_frame_sizes_offset_in_bytes()));
     __ bang_stack_size(x11, x12);
   }
-#endif
 
   // Load address of array of frame pcs into x12 (address*)
   __ ld(x12, Address(x14,
