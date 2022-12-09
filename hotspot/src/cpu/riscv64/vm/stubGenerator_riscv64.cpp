@@ -1701,7 +1701,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
     StubCodeMark mark(this, "StubRoutines", name);
 
     // Registers used as temps
-    const Register dst_klass = c_rarg5;
+   // const Register dst_klass = c_rarg5;
 
     address start = __ pc();
 
@@ -1924,7 +1924,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
       // It is safe to examine both src.length and dst.length.
       arraycopy_range_checks(src, src_pos, dst, dst_pos, scratch_length,
                              t2, L_failed);
-
+const Register dst_klass = t1;
       __ load_klass(dst_klass, dst); // reload
 
       // Marshal the base address arguments now, freeing registers.
@@ -2818,7 +2818,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
       StubRoutines::riscv64::_large_array_equals = generate_large_array_equals();
     }
 
-    generate_compare_long_strings();
+   // generate_compare_long_strings();
 
     // Safefetch stubs.
     generate_safefetch("SafeFetch32", sizeof(int),     &StubRoutines::_safefetch32_entry,
@@ -2828,7 +2828,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
                                                        &StubRoutines::_safefetchN_fault_pc,
                                                        &StubRoutines::_safefetchN_continuation_pc);
 
-    StubRoutines::riscv64::set_completed();
+   // StubRoutines::riscv64::set_completed();
   }
 
  public:
