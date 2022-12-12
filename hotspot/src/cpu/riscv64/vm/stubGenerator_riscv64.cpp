@@ -1098,12 +1098,12 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
     }
     copy_memory(aligned, s, d, count, t0, size);
 
-    if (is_oop) {
+   /* if (is_oop) {
       __ pop_reg(RegSet::of(d, count), sp);
       if (VerifyOops) {
         verify_oop_array(size, d, count, t2);
       }
-    }
+    }*/
 
    // bs->arraycopy_epilogue(_masm, decorators, is_oop, d, count, t0, RegSet());
        if (is_oop) {
@@ -1168,8 +1168,14 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
 
    // BarrierSetAssembler *bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
    // bs->arraycopy_prologue(_masm, decorators, is_oop, s, d, count, saved_regs);
+   if (is_oop) {
+      __ push_reg(RegSet::of(d, count), sp);
+     gen_write_ref_array_pre_barrier(d, count, dest_uninitialized);
+    }
 
-       if (is_oop) {
+    copy_memory(aligned, s, d, count, t0, -size);
+
+    if (is_oop) {
        __ pop_reg(RegSet::of(d, count), sp);
       if (VerifyOops)
         verify_oop_array(size, d, count, x28);
@@ -1178,14 +1184,6 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
       __ slli(count, count, exact_log2(size));
       __ add(d, d, count);     
       gen_write_ref_array_post_barrier(d, count, t1);
-    }
-
-    copy_memory(aligned, s, d, count, t0, -size);
-    if (is_oop) {
-      __ pop_reg(RegSet::of(d, count), sp);
-      if (VerifyOops) {
-        verify_oop_array(size, d, count, t2);
-      }
     }
     //bs->arraycopy_epilogue(_masm, decorators, is_oop, d, count, t0, RegSet());
     __ leave();
@@ -1538,7 +1536,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
 
     __ BIND(L_store_element);
     //__ store_heap_oop_rv(Address(to, UseCompressedOops ? 4 : 8), copied_oop); // store the oop  // store the oop
-     __ store_heap_oop(Address(to, 0), copied_oop, noreg, noreg, AS_RAW); 
+    __ store_heap_oop(Address(to, 0), copied_oop, noreg, noreg, AS_RAW); 
     __ add(to, to, UseCompressedOops ? 4 : 8);
     __ sub(count, count, 1);
     __ beqz(count, L_do_card_marks);
