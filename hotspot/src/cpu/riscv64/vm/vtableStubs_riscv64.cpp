@@ -274,13 +274,7 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   return s;
 }
 
-int VtableStub::pd_code_size_limit(bool is_vtable_stub) {
-  if (TraceJumps || DebugVtables || CountCompiledCalls || VerifyOops) {
-    return 1000;
-  }
-  int size = is_vtable_stub ? 60 : 192; // Plain + safety
-  return size;
-  }
+
 int VtableStub::pd_code_alignment() {
   // riscv64 cache line size is 64 bytes, but we want to limit alignment loss.
   const unsigned int icache_line_size = wordSize;
