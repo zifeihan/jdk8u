@@ -616,7 +616,7 @@ class Bits {                            // package-private
         unaligned = arch.equals("i386") || arch.equals("x86")
             || arch.equals("amd64") || arch.equals("x86_64")
             || arch.equals("ppc64") || arch.equals("ppc64le")
-            || arch.equals("aarch64");
+            || arch.equals("aarch64")  || arch.equals("riscv64");
         unalignedKnown = true;
         return unaligned;
     }
