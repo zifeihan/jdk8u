@@ -63,7 +63,7 @@ public class PlatformInfo {
       return "sparc";
     } else if (cpu.equals("ia64") || cpu.equals("amd64") || cpu.equals("x86_64")) {
       return cpu;
-    } else if (cpu.equals("aarch64")) {
+    } else if (cpu.equals("aarch64")|| cpu.equals("riscv64")) {
       return cpu;
     } else {
       try {
