@@ -993,7 +993,7 @@ public class HSDB implements ObjectHistogramPanel.Listener, SAListener {
                                                      anno));
             } else {
               if (VM.getVM().getCPU().equals("x86") || VM.getVM().getCPU().equals("amd64") ||
-                  VM.getVM().getCPU().equals("aarch64")) {
+                  VM.getVM().getCPU().equals("aarch64")|| VM.getVM().getCPU().equals("riscv64")) {
                 // For C2, which has null frame pointers on x86/amd64
                 CodeBlob cb = VM.getVM().getCodeCache().findBlob(curFrame.getPC());
                 Address sp = curFrame.getSP();
