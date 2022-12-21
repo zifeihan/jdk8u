@@ -201,7 +201,7 @@ void NativeMovConstReg::set_data(intptr_t x) {
 
   // Find and replace the oop/metadata corresponding to this
   // instruction in oops section.
-  CodeBlob* cb = CodeCache::find_blob(instruction_address());
+ /* CodeBlob* cb = CodeCache::find_blob(instruction_address());
   if(cb != NULL) {
     nmethod* nm = cb->as_nmethod_or_null();
     if (nm != NULL) {
@@ -220,7 +220,7 @@ void NativeMovConstReg::set_data(intptr_t x) {
     }
   } else {
     ShouldNotReachHere();
-  }
+  }*/
 }
 
 void NativeMovConstReg::print() {
