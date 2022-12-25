@@ -64,13 +64,13 @@ inline jlong Thread::cooked_allocated_bytes() {
 //}
 
 #if defined(PPC64) || defined (AARCH64)  || defined (RISCV64)
-//inline JavaThreadState JavaThread::thread_state() const    {
-  //return (JavaThreadState) OrderAccess::load_acquire((volatile jint*)&_thread_state);
-//}
+inline JavaThreadState JavaThread::thread_state() const    {
+  return (JavaThreadState) OrderAccess::load_acquire((volatile jint*)&_thread_state);
+}
 
-/*inline void JavaThread::set_thread_state(JavaThreadState s) {
+inline void JavaThread::set_thread_state(JavaThreadState s) {
   OrderAccess::release_store((volatile jint*)&_thread_state, (jint)s);
-}*/
+}
 #endif
 
 inline void JavaThread::set_done_attaching_via_jni() {
