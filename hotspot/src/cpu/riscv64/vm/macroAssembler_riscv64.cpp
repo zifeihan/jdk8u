@@ -49,7 +49,11 @@
 #include "opto/intrinsicnode.hpp"
 #include "opto/subnode.hpp"
 #endif
-
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/g1/g1CollectedHeap.inline.hpp"
+#include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
+#include "gc_implementation/g1/heapRegion.hpp"
+#endif
 #ifdef PRODUCT
 #define BLOCK_COMMENT(str) /* nothing */
 #else
@@ -2055,7 +2059,7 @@ void MacroAssembler::store_check_part_2(Register obj) {
   add(t0, obj, t0);
   sb(zr, Address(t0, 0));
 }
-
+#if INCLUDE_ALL_GCS
 void MacroAssembler::g1_write_barrier_pre(Register obj,
                                           Register pre_val,
                                           Register thread,
@@ -2229,7 +2233,7 @@ void MacroAssembler::g1_write_barrier_post(Register store_addr,
 
    bind(done);
 }
-
+#endif //INCLUDE_ALL_GCS
 int MacroAssembler::corrected_idivl(Register result, Register ra, Register rb,
                                     bool want_remainder)
 {

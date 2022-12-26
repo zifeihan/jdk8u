@@ -65,7 +65,7 @@
 // Run with +PrintInterpreter to get the VM to print out the size.
 // Max size with JVMTI
 int TemplateInterpreter::InterpreterCodeSize = 256 * 1024;
-
+#ifndef CC_INTERP
 #define __ _masm->
 
 //-----------------------------------------------------------------------------
@@ -2049,5 +2049,6 @@ void TemplateInterpreterGenerator::stop_interpreter_at() {
   __ bind(L);
   __ pop_reg(t0);
 }
-
+#endif // CC_INTERP
 #endif // !PRODUCT
+

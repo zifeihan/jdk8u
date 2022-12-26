@@ -115,6 +115,7 @@
     link_offset                                      =  0,
     return_addr_offset                               =  1,
     sender_sp_offset                                 =  2,
+#ifndef CC_INTERP
     // Interpreter frames
     interpreter_frame_oop_temp_offset                =  3, // for native calls only
 
@@ -132,6 +133,8 @@
 
     interpreter_frame_monitor_block_top_offset       = interpreter_frame_initial_sp_offset,
     interpreter_frame_monitor_block_bottom_offset    = interpreter_frame_initial_sp_offset,
+
+#endif // CC_INTERP
 
     // Entry frames
     // n.b. these values are determined by the layout defined in
@@ -202,9 +205,13 @@
   // helper to update a map with callee-saved RBP
   static void update_map_with_saved_link(RegisterMap* map, intptr_t** link_addr);
 
+#ifndef CC_INTERP
   // deoptimization support
   void interpreter_frame_set_last_sp(intptr_t* ptr_sp);
+#endif // CC_INTERP
 
- // static jint interpreter_frame_expression_stack_direction() { return -1; }
+#ifdef CC_INTERP
+  inline interpreterState get_interpreterState() const;
+#endif // CC_INTERP
 
 #endif // CPU_RISCV64_VM_FRAME_RISCV64_HPP

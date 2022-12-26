@@ -279,7 +279,7 @@ class MacroAssembler: public Assembler {
   // is up to you to ensure that the shift provided mathces the size
   // of your data.
   Address form_address(Register Rd, Register base, long byte_offset);
-
+#if INCLUDE_ALL_GCS
   void g1_write_barrier_post(Register store_addr,
                              Register new_val,
                              Register thread,
@@ -292,7 +292,7 @@ class MacroAssembler: public Assembler {
                             Register tmp,
                             bool tosca_live,
                             bool expand_call);
-
+#endif
   // allocation
   void eden_allocate(
     Register obj,                   // result: pointer to object after successful allocation
