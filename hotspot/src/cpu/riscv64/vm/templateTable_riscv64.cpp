@@ -44,7 +44,7 @@
 #include "runtime/stubRoutines.hpp"
 #include "runtime/synchronizer.hpp"
 #include "memory/barrierSet.hpp"
-
+#ifndef CC_INTERP
 #define __ _masm->
 
 // Platform-dependent initialization
@@ -481,11 +481,11 @@ void TemplateTable::fast_aldc(bool wide)
 {
   transition(vtos, atos);
 
-  const Register result = x10;
-  const Register tmp = x11;
+   Register result = x10;
+   Register tmp = x11;
   //const Register rarg = x12;
 
-  const int index_size = wide ? sizeof(u2) : sizeof(u1);
+   int index_size = wide ? sizeof(u2) : sizeof(u1);
 
   Label resolved;
 
@@ -496,7 +496,7 @@ void TemplateTable::fast_aldc(bool wide)
   __ load_resolved_reference_at_index(result, tmp);
   __ bnez(result, resolved);
 
-  const address entry = CAST_FROM_FN_PTR(address, InterpreterRuntime::resolve_ldc);
+   address entry = CAST_FROM_FN_PTR(address, InterpreterRuntime::resolve_ldc);
 
   // first time invocation - must resolve first
   __ mv(tmp, (int)bytecode());
@@ -687,7 +687,7 @@ void TemplateTable::iload() {
   transition(vtos, itos);
   if (RewriteFrequentPairs ) {
     Label rewrite, done;
-    const Register bc = x14;
+     Register bc = x14;
 
     // get next bytecode
     __ load_unsigned_byte(x11, at_bcp(Bytecodes::length_for(Bytecodes::_iload)));
@@ -871,7 +871,7 @@ void TemplateTable::index_check(Register array, Register index)
   __ null_check(array, arrayOopDesc::length_offset_in_bytes());
   // sign extend index for use by indexed load
   // check index
-  const Register length = t0;
+   Register length = t0;
   __ lwu(length, Address(array, arrayOopDesc::length_offset_in_bytes()));
   if (index != x11) {
     assert(x11 != array, "different registers");
@@ -4437,3 +4437,4 @@ void TemplateTable::multianewarray() {
   __ slli(t0, x11, 3);
   __ add(esp, esp, t0);
 }
+#endif // !CC_INTERP
