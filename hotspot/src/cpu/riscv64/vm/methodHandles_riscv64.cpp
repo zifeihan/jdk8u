@@ -312,8 +312,8 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
       if (VerifyMethodHandles && iid != vmIntrinsics::_linkToInterface) {
         Label L_ok;
         Register temp2_defc = temp2;
-        //__ load_heap_oop_rv(temp2_defc, member_clazz);
-        __ load_heap_oop(temp2_defc, member_clazz, temp3);
+        __ load_heap_oop_rv(temp2_defc, member_clazz);
+        //__ load_heap_oop(temp2_defc, member_clazz, temp3);
         load_klass_from_Class(_masm, temp2_defc);
         __ verify_klass_ptr(temp2_defc);
         __ check_klass_subtype(temp1_recv_klass, temp2_defc, temp3, L_ok);
@@ -340,18 +340,18 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
       if (VerifyMethodHandles) {
         verify_ref_kind(_masm, JVM_REF_invokeSpecial, member_reg, temp3);
       }
-      __ load_heap_oop(xmethod, member_vmtarget);
+      //__ load_heap_oop(xmethod, member_vmtarget);
       //__ access_load_at(T_ADDRESS, IN_HEAP, xmethod, vmtarget_method, noreg, noreg);
-     // __ ld(xmethod, member_vmtarget);
+        __ ld(xmethod, member_vmtarget);
       break;
 
     case vmIntrinsics::_linkToStatic:
       if (VerifyMethodHandles) {
         verify_ref_kind(_masm, JVM_REF_invokeStatic, member_reg, temp3);
       }
-      __ load_heap_oop(xmethod, member_vmtarget);
+      //__ load_heap_oop(xmethod, member_vmtarget);
       //__ access_load_at(T_ADDRESS, IN_HEAP, xmethod, vmtarget_method, noreg, noreg);
-     // __ ld(xmethod, member_vmtarget);
+        __ ld(xmethod, member_vmtarget);
       break;
 
     case vmIntrinsics::_linkToVirtual:
@@ -365,8 +365,8 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
 
       // pick out the vtable index from the MemberName, and then we can discard it:
       Register temp2_index = temp2;
-      __ access_load_at(T_ADDRESS, IN_HEAP, temp2_index, member_vmindex, noreg, noreg);
-      //__ ld(temp2_index, member_vmindex);
+      //__ access_load_at(T_ADDRESS, IN_HEAP, temp2_index, member_vmindex, noreg, noreg);
+        __ ld(temp2_index, member_vmindex);
 
       if (VerifyMethodHandles) {
         Label L_index_ok;
