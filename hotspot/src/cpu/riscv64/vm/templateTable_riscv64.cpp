@@ -1372,8 +1372,8 @@ void TemplateTable::aastore() {
   __ profile_null_seen(x12);
 
   // Store a NULL
-  do_oop_store(_masm, element_address, noreg, IS_ARRAY);
-  //do_oop_store_rv(_masm, element_address, noreg, _bs->kind(), true);
+  //do_oop_store(_masm, element_address, noreg, IS_ARRAY);
+  do_oop_store_rv(_masm, element_address, noreg, _bs->kind(), true);
 
   // Pop stack arguments
   __ bind(done);
@@ -3097,8 +3097,8 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static) {
     __ add(off, obj, off); // if static, obj from cache, else obj from stack.
     const Address field(off, 0);
     // Store into the field
-    //do_oop_store_rv(_masm, field, x10, _bs->kind(), false);
-    do_oop_store(_masm, field, x10, IN_HEAP);
+    do_oop_store_rv(_masm, field, x10, _bs->kind(), false);
+    //do_oop_store(_masm, field, x10, IN_HEAP);
     /*if (rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_aputfield, bc, x11, true, byte_no);
     }*/
