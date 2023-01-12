@@ -1363,8 +1363,8 @@ void TemplateTable::aastore() {
   // Get the value we will store
   __ ld(x10, at_tos());
   // Now store using the appropriate barrier
-  do_oop_store(_masm, element_address, x10, IS_ARRAY);
-  //do_oop_store_rv(_masm, element_address, x10, _bs->kind(), true);
+  //do_oop_store(_masm, element_address, x10, IS_ARRAY);
+  do_oop_store_rv(_masm, element_address, x10, _bs->kind(), true);
   __ j(done);
 
   // Have a NULL in x10, x13=array, x12=index.  Store NULL at ary[idx]
@@ -2808,8 +2808,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static)
   __ sub(t0, flags, atos);
   __ bnez(t0, notObj);
   // atos
-  do_oop_load(_masm, field, x10, IN_HEAP);
-  //__ load_heap_oop_rv(x10, field);
+  //do_oop_load(_masm, field, x10, IN_HEAP);
+  __ load_heap_oop_rv(x10, field);
   __ push(atos);
   if (!is_static) {
     patch_bytecode(Bytecodes::_fast_agetfield, bc, x11);
@@ -3484,8 +3484,8 @@ void TemplateTable::fast_accessfield(TosState state)
   // access field
   switch (bytecode()) {
   case Bytecodes::_fast_agetfield:
-    do_oop_load(_masm, field, x10, IN_HEAP);
-    //__ load_heap_oop_rv(x10, field);
+    //do_oop_load(_masm, field, x10, IN_HEAP);
+    __ load_heap_oop_rv(x10, field);
     __ verify_oop(x10);
     break;
   case Bytecodes::_fast_lgetfield:
