@@ -1534,7 +1534,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
 
     __ BIND(L_store_element);
     //__ store_heap_oop_rv(Address(to, UseCompressedOops ? 4 : 8), copied_oop); // store the oop  // store the oop
-     __ store_heap_oop(Address(to, 0), copied_oop, noreg, noreg, AS_RAW); 
+    __ store_heap_oop(Address(to, 0), copied_oop, noreg, noreg, AS_RAW); 
     __ add(to, to, UseCompressedOops ? 4 : 8);
     __ sub(count, count, 1);
     __ beqz(count, L_do_card_marks);
