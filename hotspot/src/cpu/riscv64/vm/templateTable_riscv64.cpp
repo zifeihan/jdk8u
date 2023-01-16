@@ -1973,7 +1973,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
     __ push_i(x11);
     // Adjust the bcp by the 16-bit displacement in x12
     __ add(xbcp, xbcp, x12);
-    //__ load_unsigned_byte(t0, Address(xbcp, 0));
+    __ load_unsigned_byte(t0, Address(xbcp, 0));
     // load the next target bytecode into t0, it is the argument of dispatch_only
     __ dispatch_only(vtos, /*generate_poll*/true);
     return;
