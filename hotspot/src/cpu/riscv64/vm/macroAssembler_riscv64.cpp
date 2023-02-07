@@ -2205,7 +2205,7 @@ void MacroAssembler::g1_write_barrier_post(Register store_addr,
   assert((int)CardTableModRefBS::dirty_card_val() == 0, "must be 0");
 
    //fence(MacroAssembler::MacroAssembler::StoreLoad);
-   membar(Assembler::Assembler::StoreLoad);
+   membar(MacroAssembler::MacroAssembler::StoreLoad);
 
    lbu(tmp2, Address(card_addr));
    beqz(tmp2, done);

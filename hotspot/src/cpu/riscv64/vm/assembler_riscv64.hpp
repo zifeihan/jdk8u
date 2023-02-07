@@ -147,7 +147,7 @@ const FloatRegister g_FPArgReg[Argument::n_float_register_parameters_c] = {
 #define assert_cond(ARG1) vmassert(ARG1, #ARG1)
 
 
-class PrePost {
+/*class PrePost {
   int _offset;
   Register _r;
 public:
@@ -168,16 +168,16 @@ public:
 namespace ext
 {
   enum operation { uxtb, uxth, uxtw, uxtx, sxtb, sxth, sxtw, sxtx };
-};
+};*/
 // Addressing modes
 class Address {
  public:
 
-  //enum mode { no_mode, base_plus_offset, pcrel, literal };
-    enum mode { no_mode, base_plus_offset, pre, post, pcrel,
-              base_plus_offset_reg, literal };
+  enum mode { no_mode, base_plus_offset, pcrel, literal };
+    //enum mode { no_mode, base_plus_offset, pre, post, pcrel,
+      //        base_plus_offset_reg, literal };
       // Shift and extend for base reg + reg offset addressing
-  class extend {
+ /* class extend {
     int _option, _shift;
     ext::operation _op;
   public:
@@ -203,13 +203,13 @@ class Address {
   public:
     sxtx(int shift = -1): extend(shift, 0b111, ext::sxtx) { }
   };
-
+*/
  private:
   Register _base;
   int64_t _offset;
   enum mode _mode;
   Register _index;
-  extend _ext;
+  //extend _ext;
 
   RelocationHolder _rspec;
 
@@ -247,9 +247,9 @@ class Address {
       _rspec(rspec),
       _target(target)  { }
   Address(address target, relocInfo::relocType rtype = relocInfo::external_word_type);
-    Address(Register r, Register r1, extend ext = lsl())
-    : _mode(base_plus_offset), _base(r), _index(r1),
-    _ext(ext), _offset(0), _target(0) { }
+  //Address(Register r, Register r1, extend ext = lsl())
+    //: _mode(base_plus_offset), _base(r), _index(r1),
+    //_ext(ext), _offset(0), _target(0) { }
 
   const Register base() const {
     guarantee((_mode == base_plus_offset | _mode == pcrel | _mode == literal), "wrong mode");
@@ -436,8 +436,8 @@ public:
     emit_int32(0);
   }
   //Adding barrier_rv
-  enum barrier_rv {OSHLD = 0b0001, OSHST, OSH, NSHLD=0b0101, NSHST, NSH,
-                ISHLD = 0b1001, ISHST, ISH, LD=0b1101, ST, SY};
+  /*enum barrier_rv {OSHLD = 0b0001, OSHST, OSH, NSHLD=0b0101, NSHST, NSH,
+    //            ISHLD = 0b1001, ISHST, ISH, LD=0b1101, ST, SY};
   enum Membar_mask_bits {
     // We can use ISH for a barrier because the ARM ARM says "This
     // architecture assumes that all Processing Elements that use the
@@ -448,7 +448,7 @@ public:
     LoadLoad   = ISHLD,
     StoreLoad  = ISH,
     AnyAny     = ISH
-  };
+  };*/
 // Rigster Instruction
 #define INSN(NAME, op, funct3, funct7)                          \
   void NAME(Register Rd, Register Rs1, Register Rs2) {          \
