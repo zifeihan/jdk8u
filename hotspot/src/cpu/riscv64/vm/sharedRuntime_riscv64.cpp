@@ -33,7 +33,7 @@
 #include "interpreter/interpreter.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/compiledICHolder.hpp"
-#include "safepointMechanism_riscv64.hpp"
+//#include "safepointMechanism_riscv64.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/vframeArray.hpp"
 #include "utilities/align.hpp"

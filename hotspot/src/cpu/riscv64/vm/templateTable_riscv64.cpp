@@ -25,25 +25,25 @@
  */
 
 #include "precompiled.hpp"
-#include "asm/macroAssembler.inline.hpp"
+//#include "asm/macroAssembler.inline.hpp"
 #include "asm/macroAssembler.hpp"
 //#include "barrierSetAssembler_riscv64.hpp"
 //#include "interpreter/interp_masm.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
 #include "interpreter/templateTable.hpp"
-#include "memory/universe.hpp"
+//#include "memory/universe.hpp"
 #include "memory/universe.inline.hpp"
 #include "oops/method.hpp"
 #include "oops/methodData.hpp"
 #include "oops/objArrayKlass.hpp"
 #include "oops/oop.inline.hpp"
 #include "prims/methodHandles.hpp"
-#include "runtime/frame.inline.hpp"
+//#include "runtime/frame.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/synchronizer.hpp"
-#include "memory/barrierSet.hpp"
+//#include "memory/barrierSet.hpp"
 #ifndef CC_INTERP
 #define __ _masm->
 

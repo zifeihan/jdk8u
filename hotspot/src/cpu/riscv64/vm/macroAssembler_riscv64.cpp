@@ -38,6 +38,7 @@
 #include "oops/klass.inline.hpp"
 #include "oops/oop.hpp"
 #include "runtime/biasedLocking.hpp"
+#include "runtime/interfaceSupport.hpp"
 //#include "runtime/interfaceSupport.inline.hpp"
 //#include "runtime/jniHandles.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
@@ -48,6 +49,7 @@
 #include "opto/compile.hpp"
 #include "opto/intrinsicnode.hpp"
 #include "opto/subnode.hpp"
+#include "opto/node.hpp"
 #endif
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/g1/g1CollectedHeap.inline.hpp"
