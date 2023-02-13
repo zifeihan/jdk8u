@@ -26,7 +26,7 @@
 
 #include "precompiled.hpp"
 #include "asm/assembler.hpp"
-#include "asm/macroAssembler.inline.hpp"
+//#include "asm/macroAssembler.inline.hpp"
 #include "asm/register.hpp"
 #include "interp_masm_riscv64.hpp"
 #include "register_riscv64.hpp"

@@ -26,6 +26,7 @@
 
 #include "precompiled.hpp"
 #include "asm/macroAssembler.inline.hpp"
+#include "asm/macroAssembler.hpp"
 //#include "barrierSetAssembler_riscv64.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
 #include "interpreter/bytecodeTracer.hpp"
