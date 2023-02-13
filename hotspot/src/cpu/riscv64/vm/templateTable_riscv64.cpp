@@ -3382,8 +3382,8 @@ void TemplateTable::fast_storefield(TosState state)
   // access field
   switch (bytecode()) {
   case Bytecodes::_fast_aputfield:
-    //do_oop_store_rv(_masm, field, x10, _bs->kind(), false);
-    do_oop_store(_masm, field, x10, IN_HEAP);
+    do_oop_store_rv(_masm, field, x10, _bs->kind(), false);
+    //do_oop_store(_masm, field, x10, IN_HEAP);
     break;
   case Bytecodes::_fast_lputfield:
     //__ sd(x10, field);
