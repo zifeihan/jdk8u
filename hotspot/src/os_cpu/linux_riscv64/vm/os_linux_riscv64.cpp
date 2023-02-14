@@ -42,6 +42,7 @@
 #include "runtime/extendedPC.hpp"
 #include "runtime/frame.inline.hpp"
 //#include "runtime/interfaceSupport.inline.hpp"
+#include "runtime/interfaceSupport.hpp"
 #include "runtime/java.hpp"
 #include "runtime/javaCalls.hpp"
 #include "runtime/mutexLocker.hpp"
@@ -528,8 +529,8 @@ JVM_handle_linux_signal(int sig,
   err.report_and_die();
 
   ShouldNotReachHere();
-  return true; // Mute compiler
 }
+  return true; // Mute compiler
 }
 
 void os::Linux::init_thread_fpu_state(void) {
