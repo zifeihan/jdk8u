@@ -64,6 +64,9 @@ all:
 	if [ -d $(AGENT_DIR) -a "$(SRCARCH)" != "ia64" \
              -a "$(SRCARCH)" != "zero" ] ; then \
 	   $(MAKE) -f sa.make $(GENERATED)/sa-jdi.jar; \
+	   mkdir -p $(TOPDIR)/../../../jdk/lib; \
+	   cp $(GENERATED)/sa-jdi.jar $(TOPDIR)/../../../jdk/lib/sa-jdi.jar; \
+	   echo "Copy success."; \
 	fi
 
 $(GENERATED)/sa-jdi.jar:: $(AGENT_FILES)
