@@ -40,7 +40,7 @@
 #include "runtime/basicLock.hpp"
 #include "runtime/biasedLocking.hpp"
 #include "runtime/frame.inline.hpp"
-#include "safepointMechanism_riscv64.hpp"
+//#include "safepointMechanism_riscv64.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/thread.inline.hpp"
 #include "prims/jvmtiRedefineClassesTrace.hpp"
