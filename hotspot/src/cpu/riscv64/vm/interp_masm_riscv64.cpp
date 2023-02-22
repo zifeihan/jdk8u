@@ -39,7 +39,7 @@
 #include "prims/jvmtiThreadState.hpp"
 #include "runtime/basicLock.hpp"
 #include "runtime/biasedLocking.hpp"
-#include "runtime/frame.inline.hpp"
+//#include "runtime/frame.inline.hpp"
 //#include "safepointMechanism_riscv64.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/thread.inline.hpp"
@@ -1849,7 +1849,7 @@ void InterpreterMacroAssembler::profile_return_type(Register mdp, Register ret, 
       // type because we're right after it and we don't known its
       // length
       Label do_profile;
-      lbu(t0, Address(xbcp, 0));
+      lb(t0, Address(xbcp, 0));
       li(tmp, Bytecodes::_invokedynamic);
       beq(t0, tmp, do_profile);
       li(tmp, Bytecodes::_invokehandle);
@@ -1878,7 +1878,7 @@ void InterpreterMacroAssembler::profile_parameters_type(Register mdp, Register t
 
     // Load the offset of the area within the MDO used for
     // parameters. If it's negative we're not profiling any parameters
-    lwu(tmp1, Address(mdp, in_bytes(MethodData::parameters_type_data_di_offset()) - in_bytes(MethodData::data_offset())));
+    lw(tmp1, Address(mdp, in_bytes(MethodData::parameters_type_data_di_offset()) - in_bytes(MethodData::data_offset())));
     srli(tmp2, tmp1, 31);
     bnez(tmp2, profile_continue);  // i.e. sign bit set
 
