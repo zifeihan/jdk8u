@@ -26,6 +26,7 @@
 
 #ifndef CPU_RISCV64_VM_INTERPRETERRT_RISCV64_HPP
 #define CPU_RISCV64_VM_INTERPRETERRT_RISCV64_HPP
+#include "memory/allocation.hpp"
 
 // This is included in the middle of class Interpreter.
 // Do not include files here.
@@ -47,7 +48,7 @@ class SignatureHandlerGenerator: public NativeSignatureIterator {
 
  public:
   // Creation
-  SignatureHandlerGenerator(const methodHandle& method, CodeBuffer* buffer);
+  SignatureHandlerGenerator(methodHandle method, CodeBuffer* buffer);
   virtual ~SignatureHandlerGenerator() {
     _masm = NULL;
   }

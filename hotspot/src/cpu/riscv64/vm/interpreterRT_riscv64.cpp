@@ -48,7 +48,7 @@ Register InterpreterRuntime::SignatureHandlerGenerator::to()   { return sp; }
 Register InterpreterRuntime::SignatureHandlerGenerator::temp() { return t0; }
 
 InterpreterRuntime::SignatureHandlerGenerator::SignatureHandlerGenerator(
-  const methodHandle& method, CodeBuffer* buffer) : NativeSignatureIterator(method) {
+   methodHandle method, CodeBuffer* buffer) : NativeSignatureIterator(method) {
   _masm = new MacroAssembler(buffer); // allocate on resourse area by default
   _num_int_args = (method->is_static() ? 1 : 0);
   _num_fp_args = 0;
@@ -256,7 +256,7 @@ class SlowSignatureHandler
   }
 
  public:
-  SlowSignatureHandler(const methodHandle& method, address from, intptr_t* to)
+  SlowSignatureHandler(const methodHandle method, address from, intptr_t* to)
     : NativeSignatureIterator(method)
   {
     _from = from;
