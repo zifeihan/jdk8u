@@ -402,7 +402,7 @@ void LIR_Op4::emit_code(LIR_Assembler* masm) {
 }
 #endif
 
-#ifdef NO_FLAG_REG
+/*#ifdef NO_FLAG_REG
 // LIR_Op4
 void LIR_Op4::print_instr(outputStream* out) const {
   print_condition(out, cond()); out->print(" ");
@@ -412,7 +412,7 @@ void LIR_Op4::print_instr(outputStream* out) const {
   in_opr4()->print(out);        out->print(" ");
   result_opr()->print(out);
 }
-#endif
+#endif*/
 void LIR_OpBranch::negate_cond() {
   #ifndef NO_FLAG_REG
   switch (_cond) {
@@ -1971,7 +1971,16 @@ void LIR_OpJavaCall::print_instr(outputStream* out) const {
     out->print(" [result: "); result_opr()->print(out); out->print("]");
   }
 }
-
+#ifdef NO_FLAG_REG
+void LIR_Op4::print_instr(outputStream* out) const {
+  print_condition(out, cond()); out->print(" ");
+  in_opr1()->print(out);        out->print(" ");
+  in_opr2()->print(out);        out->print(" ");
+  in_opr3()->print(out);        out->print(" ");
+  in_opr4()->print(out);        out->print(" ");
+  result_opr()->print(out);
+}
+#endif
 // LIR_OpLabel
 void LIR_OpLabel::print_instr(outputStream* out) const {
   out->print("[label:" INTPTR_FORMAT "]", p2i(_label));
