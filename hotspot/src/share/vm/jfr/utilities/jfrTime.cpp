@@ -54,7 +54,7 @@ bool JfrTime::is_ft_supported() {
 
 
 const void* JfrTime::time_function() {
-#if defined(X86) && !defined(ZERO) && !defined(RISCV64)
+#if defined(X86) && !defined(ZERO)
   return _ft_enabled ? (const void*)Rdtsc::elapsed_counter : (const void*)os::elapsed_counter;
 #else
   return (const void*)os::elapsed_counter;
@@ -62,7 +62,7 @@ const void* JfrTime::time_function() {
 }
 
 jlong JfrTime::frequency() {
-#if defined(X86) && !defined(ZERO) && !defined(RISCV64)
+#if defined(X86) && !defined(ZERO)
   return _ft_enabled ? Rdtsc::frequency() : os::elapsed_frequency();
 #else
   return os::elapsed_frequency();
