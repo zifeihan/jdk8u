@@ -164,7 +164,7 @@ static void do_oop_store_rv(MacroAssembler* _masm,
             __ mv(x13, obj.base());
           }
         } else {
-          __ lea(x13, obj);
+          __ la(x13, obj);
         }
         __ g1_write_barrier_pre(x13 /* obj */,
                                 x11 /* pre_val */,
@@ -203,7 +203,7 @@ static void do_oop_store_rv(MacroAssembler* _masm,
           if (!precise || (obj.index() == noreg && obj.offset() == 0)) {
             __ store_check(obj.base());
           } else {
-            __ lea(x13, obj);
+            __ la(x13, obj);
             __ store_check(x13);
           }
         }
