@@ -231,7 +231,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
           __ push_call_clobbered_registers();
           // must compute element count unless barrier set interface is changed (other platforms supply count)
           assert_different_registers(start, end, scratch);
-          __ lea(scratch, Address(end, BytesPerHeapOop));
+          __ la(scratch, Address(end, BytesPerHeapOop));
           __ sub(scratch, scratch, start);               // subtract start to get #bytes
           __ srli(scratch, scratch, LogBytesPerHeapOop);  // convert to element count
           __ mv(c_rarg0, start);
@@ -259,9 +259,9 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
             __ membar(__ StoreStore);
           }
           __ BIND(L_loop);
-          __ add(count, count, start);
-          __ sb(zr, Address(count, 0));
-          __ addi(count, count, -1);//replace subs
+        //  __ add(count, count, start);
+        //  __ sb(zr, Address(count, 0));
+        //  __ addi(count, count, -1);//replace subs
           __ bge(count, 0, L_loop);
         }
         break;
@@ -1113,8 +1113,8 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
         verify_oop_array(size, d, count, x28);
       __ sub(count, count, 1); // make an inclusive end pointer
       //__ lea(count, Address(d, count, Address::lsl(exact_log2(size))));
-      __ slli(count, count, exact_log2(size));
-      __ add(d, d, count);
+      __ slli(t1, count, exact_log2(size));
+      __ add(count, d, t1);
       gen_write_ref_array_post_barrier(d, count, t0);
     }
  
@@ -1182,9 +1182,9 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
         verify_oop_array(size, d, count, x28);
       __ sub(count, count, 1); // make an inclusive end pointer
       //__ lea(count, Address(d, count, Address::lsl(exact_log2(size))));
-      __ slli(count, count, exact_log2(size));
-      __ add(d, d, count);     
-      gen_write_ref_array_post_barrier(d, count, t1);
+      __ slli(t1, count, exact_log2(size));
+      __ add(count, d, t1);
+      gen_write_ref_array_post_barrier(d, count, t0);
     }
     //bs->arraycopy_epilogue(_masm, decorators, is_oop, d, count, t0, RegSet());
     __ leave();

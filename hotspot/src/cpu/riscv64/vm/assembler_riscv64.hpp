@@ -264,7 +264,7 @@ class Address {
   mode getMode() const {
     return _mode;
   }
-  void lea(MacroAssembler *, Register) const;//Adding new function 
+  //void lea(MacroAssembler *, Register) const;//Adding new function 
   bool uses(Register reg) const { return _base == reg;}
   const address target() const { return _target; }
   const RelocationHolder& rspec() const { return _rspec; }
