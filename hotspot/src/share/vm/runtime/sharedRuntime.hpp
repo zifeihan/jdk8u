@@ -393,13 +393,13 @@ class SharedRuntime: AllStatic {
   // is true.
   static void convert_ints_to_longints(int i2l_argcnt, int& in_args_count,
                                        BasicType*& in_sig_bt, VMRegPair*& in_regs);
-  static void gen_i2c_adapter(MacroAssembler *_masm,
+  /*static void gen_i2c_adapter(MacroAssembler *_masm,
                               int total_args_passed,
                               int comp_args_on_stack,
                               const BasicType *sig_bt,
                               const VMRegPair *regs);
 
- /* static nmethod* generate_native_wrapper(MacroAssembler* masm,
+  static nmethod* generate_native_wrapper(MacroAssembler* masm,
                                           const methodHandle& method,
                                           int compile_id,
                                           BasicType* sig_bt,
