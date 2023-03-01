@@ -168,7 +168,20 @@ int AbstractInterpreter::size_activation(int max_stack,
   return size;
 }
 bool AbstractInterpreter::can_be_compiled(methodHandle m) {
-  return true;
+  switch (method_kind(m)) {
+    case Interpreter::java_lang_math_sin     : // fall thru
+    case Interpreter::java_lang_math_cos     : // fall thru
+    case Interpreter::java_lang_math_tan     : // fall thru
+    case Interpreter::java_lang_math_abs     : // fall thru
+    case Interpreter::java_lang_math_log     : // fall thru
+    case Interpreter::java_lang_math_log10   : // fall thru
+    case Interpreter::java_lang_math_sqrt    : // fall thru
+    case Interpreter::java_lang_math_pow     : // fall thru
+    case Interpreter::java_lang_math_exp     :
+      return false;
+    default:
+      return true;
+  }
 }
 void AbstractInterpreter::layout_activation(Method* method,
                                             int tempcount,
