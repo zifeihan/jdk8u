@@ -520,7 +520,7 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state,
     __ should_not_reach_here();
     __ bind(L);
   }
-
+    __ dispatch_next(state, step);
   /*if (continuation == NULL) {
     __ dispatch_next(state, step);
   } else {
