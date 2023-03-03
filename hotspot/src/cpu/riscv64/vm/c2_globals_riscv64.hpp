@@ -41,7 +41,7 @@ define_pd_global(bool, InlineIntrinsics,             true);
 define_pd_global(bool, PreferInterpreterNativeStubs, false);
 define_pd_global(bool, ProfileTraps,                 true);
 define_pd_global(bool, UseOnStackReplacement,        true);
-define_pd_global(bool, ProfileInterpreter,           true);
+//define_pd_global(bool, ProfileInterpreter,           true);
 define_pd_global(bool, TieredCompilation,            trueInTiered);
 define_pd_global(intx, CompileThreshold,             10000);
 define_pd_global(intx, BackEdgeThreshold,            100000);
@@ -58,7 +58,11 @@ define_pd_global(intx, LoopPercentProfileLimit,      10);
 // InitialCodeCacheSize derived from specjbb2000 run.
 define_pd_global(intx, InitialCodeCacheSize,         2496*K); // Integral multiple of CodeCacheExpansionSize
 define_pd_global(intx, CodeCacheExpansionSize,       64*K);
-
+#ifdef CC_INTERP
+define_pd_global(bool, ProfileInterpreter,           false);
+#else
+define_pd_global(bool, ProfileInterpreter,           true);
+#endif //
 // Ergonomics related flags
 define_pd_global(uint64_t,MaxRAM,                    128ULL*G);
 define_pd_global(intx, RegisterCostAreaRatio,        16000);
