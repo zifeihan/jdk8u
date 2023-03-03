@@ -26,7 +26,7 @@
 
 #include "precompiled.hpp"
 #include "asm/assembler.hpp"
-#include "asm/macroAssembler.inline.hpp"
+//#include "asm/macroAssembler.inline.hpp"
 #include "c1/c1_CodeStubs.hpp"
 #include "c1/c1_Compilation.hpp"
 #include "c1/c1_LIRAssembler.hpp"
@@ -43,9 +43,9 @@
 #include "memory/cardTableModRefBS.hpp"
 #include "nativeInst_riscv64.hpp"
 #include "oops/objArrayKlass.hpp"
-#include "runtime/frame.inline.hpp"
+//#include "runtime/frame.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
-#include "utilities/macros.hpp"
+//#include "utilities/macros.hpp"
 #include "vmreg_riscv64.inline.hpp"
 
 #ifndef PRODUCT
@@ -382,6 +382,38 @@ int LIR_Assembler::emit_deopt_handler() {
 
   return offset;
 }
+void LIR_Assembler::poll_for_safepoint(relocInfo::relocType rtype, CodeEmitInfo* info) {
+  __ mv(t0, SafepointSynchronize::address_of_state());
+  __ lbu(t0, Address(t0));
+  Label nope, poll;
+  __ beqz(t0, nope);
+  __ block_comment("safepoint");
+  __ enter();
+  __ push_reg(0x3, sp);                // r0 & r1
+  __ push_reg(0x3ffffffc, sp);         // integer registers except lr & sp & r0 & r1
+  __ la(x10, poll);
+  __ sd(x10, Address(xthread, JavaThread::saved_exception_pc_offset()));
+  __ mv(t0, CAST_FROM_FN_PTR(address, SharedRuntime::get_poll_stub));
+  __ jalr(t0);
+  __ ifence();
+  __ pop_reg(0x3ffffffc, sp);          // integer registers except lr & sp & r0 & r1
+  __ mv(t0, x10);
+  __ pop_reg(0x3, sp);                 // r0 & r1
+  __ leave();
+  __ jr(t0);
+  address polling_page(os::get_polling_page());
+  assert(os::is_poll_address(polling_page), "should be");
+  int32 off=0;
+  __ la_patchable(t0, Address(polling_page, rtype), off);
+  __ bind(poll);
+  if (info)
+    add_debug_info_for_branch(info);  // This isn't just debug info:
+                                      // it's the oop map
+  else
+  __ code_section()->relocate(pc(), rtype);
+  __ lwu(zr, Address(t0, off));
+  __ bind(nope);
+}
 
 void LIR_Assembler::return_op(LIR_Opr result) {
   assert(result->is_illegal() || !result->is_single_cpu() || result->as_register() == x10, "word returns are in x10");
@@ -392,15 +424,21 @@ void LIR_Assembler::return_op(LIR_Opr result) {
  // if (StackReservedPages > 0 && compilation()->has_reserved_stack_access()) {
  //   __ reserved_stack_check();
  // }
-
+  if (UseCompilerSafepoints) {
     address polling_page(os::get_polling_page());
     __ read_polling_page(t0, polling_page, relocInfo::poll_return_type);
+  } else {
+    poll_for_safepoint(relocInfo::poll_return_type);
+  }
+    //address polling_page(os::get_polling_page());
+    //__ read_polling_page(t0, polling_page, relocInfo::poll_return_type);
     __ ret();
 
 }
 
 int LIR_Assembler::safepoint_poll(LIR_Opr tmp, CodeEmitInfo* info) {
   address polling_page(os::get_polling_page());
+  if (UseCompilerSafepoints) {
   guarantee(info != NULL, "Shouldn't be NULL");
   assert(os::is_poll_address(polling_page), "should be");
   int32_t offset = 0;
@@ -408,6 +446,9 @@ int LIR_Assembler::safepoint_poll(LIR_Opr tmp, CodeEmitInfo* info) {
   add_debug_info_for_branch(info);  // This isn't just debug info:
                                     // it's the oop map
   __ read_polling_page(t0, offset, relocInfo::poll_type);
+  }else{
+    poll_for_safepoint(relocInfo::poll_type, info);
+  }
   return __ offset();
 }
 
