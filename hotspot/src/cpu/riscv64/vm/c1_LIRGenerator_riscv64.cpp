@@ -326,7 +326,7 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {  assert(x->is_pinned(),"")
     if (use_length) {
      // __ cmp(lir_cond_belowEqual, length.result(), index.result());
       //__ branch(lir_cond_belowEqual, T_INT, new RangeCheckStub(range_check_info, index.result()));
-     __ branch(lir_cond_belowEqual, length.result(), length.result(), T_INT, new RangeCheckStub(range_check_info, index.result())); 
+     __ branch(lir_cond_belowEqual, length.result(), index.result(), T_INT, new RangeCheckStub(range_check_info, index.result())); 
     } else {
       array_range_check(array.result(), index.result(), null_check_info, range_check_info);
       // range_check also does the null check
