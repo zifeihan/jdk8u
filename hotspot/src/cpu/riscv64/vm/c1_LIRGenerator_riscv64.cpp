@@ -216,10 +216,16 @@ LIR_Address* LIRGenerator::emit_array_address(LIR_Opr array_opr, LIR_Opr index_o
   if (index_opr->is_constant()) {
     addr = new LIR_Address(array_opr, offset_in_bytes + (intx)(index_opr->as_jint()) * elem_size, type);
   } else {
-    if (index_opr->type() == T_INT) {
+    /*if (index_opr->type() == T_INT) {
       LIR_Opr tmp = new_register(T_LONG);
       __ convert(Bytecodes::_i2l, index_opr, tmp);
       index_opr = tmp;
+    }*/
+      if (offset_in_bytes) {
+      LIR_Opr tmp = new_pointer_register();
+      __ add(array_opr, LIR_OprFact::intConst(offset_in_bytes), tmp);
+      array_opr = tmp;
+      offset_in_bytes = 0;
     }
     addr = new LIR_Address(array_opr, index_opr, LIR_Address::scale(type), offset_in_bytes, type);
   }
