@@ -476,6 +476,14 @@ OopMapSet* Runtime1::generate_handle_exception(StubID id, StubAssembler *sasm) {
     case handle_exception_from_callee_id:
       // Pop the return address.
       __ leave();
+      // Restore SP from FP if the exception PC is a method handle call site.
+    {
+      Label nope;
+      __ lwu(t0, Address(xthread, JavaThread::is_method_handle_return_offset()));
+      __ beqz(t0, nope);
+      __ mv(sp, fp);
+      __ bind(nope);
+    }
       __ ret();  // jump to exception handler
       break;
     default:  ShouldNotReachHere();
