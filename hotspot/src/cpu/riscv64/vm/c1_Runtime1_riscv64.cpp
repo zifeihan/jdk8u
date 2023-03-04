@@ -544,6 +544,14 @@ void Runtime1::generate_unwind_exception(StubAssembler *sasm) {
 
   __ verify_not_null_oop(exception_oop);
 
+    {
+    Label foo;
+    __ lwu(t0, Address(xthread, JavaThread::is_method_handle_return_offset()));
+    __ beqz(t0, foo);
+    __ mv(sp, fp);
+    __ bind(foo);
+  }
+
   // continue at exception handler (return address removed)
   // note: do *not* remove arguments when unwinding the
   //       activation since the caller assumes having
