@@ -151,6 +151,7 @@ void C1_MacroAssembler::try_allocate(Register obj, Register var_size_in_bytes, i
     tlab_allocate(obj, var_size_in_bytes, con_size_in_bytes, tmp1, tmp2, slow_case, /* is_far */ true);
   } else {
     eden_allocate(obj, var_size_in_bytes, con_size_in_bytes, tmp1, slow_case, /* is_far */ true);
+    incr_allocated_bytes(var_size_in_bytes, con_size_in_bytes, t1);
   }
 }
 
@@ -224,7 +225,7 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
 
   initialize_header(obj, klass, noreg, tmp1, tmp2);
 
-  if (!(UseTLAB && ZeroTLAB && is_tlab_allocated)) {
+  //if (!(UseTLAB && ZeroTLAB && is_tlab_allocated)) {
     // clear rest of allocated space
     const Register index = tmp2;
     // 16: multipler for threshold
@@ -269,7 +270,7 @@ void C1_MacroAssembler::initialize_object(Register obj, Register klass, Register
       add(t0, t0, unroll * wordSize);
       bnez(index, loop);
     }
-  }
+ // }
 
   membar(MacroAssembler::StoreStore);
 

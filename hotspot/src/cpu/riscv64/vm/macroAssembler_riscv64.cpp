@@ -3232,7 +3232,7 @@ void MacroAssembler::eden_allocate(Register obj,
                                    bool is_far) {
   assert_cond(masm != NULL);
   assert_different_registers(obj, var_size_in_bytes, tmp1);
-  if (!Universe::heap()->supports_inline_contig_alloc()) {
+  if (CMSIncrementalMode || !Universe::heap()->supports_inline_contig_alloc()) {
      j(slow_case);
   } else {
     Register end = tmp1;
@@ -3275,13 +3275,13 @@ void MacroAssembler::incr_allocated_bytes(Register var_size_in_bytes,
                                                int con_size_in_bytes,
                                                Register tmp1) {
   assert_cond(masm != NULL);
- assert(tmp1->is_valid(), "need temp reg");
+  assert(tmp1->is_valid(), "need temp reg");
  
    ld(tmp1, Address(xthread, in_bytes(JavaThread::allocated_bytes_offset())));
   if (var_size_in_bytes->is_valid()) {
     add(tmp1, tmp1, var_size_in_bytes);
   } else {
-     add(tmp1, tmp1, con_size_in_bytes);
+    add(tmp1, tmp1, con_size_in_bytes);
   }
    sd(tmp1, Address(xthread, in_bytes(JavaThread::allocated_bytes_offset())));
  }
