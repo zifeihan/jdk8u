@@ -591,7 +591,7 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
                                      MethodCounters::invocation_counter_offset() +
                                      InvocationCounter::counter_offset());
     __ get_method_counters(xmethod, t1, done);
-    const Address mask(t1, in_bytes(MethodData::invoke_mask_offset()));
+    const Address mask(t1, in_bytes(MethodCounters::invoke_mask_offset()));
     __ increment_mask_and_jump(invocation_counter, increment, mask, t0, x11, false, overflow);
     __ bind(done);
   } else { // not TieredCompilation
@@ -624,7 +624,7 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
 
     if (ProfileInterpreter && profile_method != NULL) {
       // Test to see if we should create a method data oop
-      int32_t offset ;
+      int32_t offset=0 ;
      // __ ld(t1, Address(xmethod, Method::method_counters_offset()));
       //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
       __ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
@@ -639,7 +639,7 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
       //__ ld(t1, Address(xmethod, Method::method_counters_offset()));
       //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_invocation_limit_offset())));
      // __ la(t1, ExternalAddress((address) &InvocationCounter::InterpreterInvocationLimit)); 
-     int32_t offset ;
+     int32_t offset=0 ;
       __ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
       __ lwu(t1, Address(t1, offset));
       __ bltu(x10, t1, done);
@@ -828,11 +828,11 @@ address InterpreterGenerator::generate_empty_entry(void) {
   // If we need a safepoint check, generate full interpreter entry.
   Label slow_path;
   {
-    int32_t offset;
+    int32_t offset=0;
     assert(SafepointSynchronize::_not_synchronized == 0,
            "SafepointSynchronize::_not_synchronized");
     __ la_patchable(t1, SafepointSynchronize::address_of_state(), offset);
-    __ ld(t1, Address(t1, offset));
+    __ lwu(t1, Address(t1, offset));
     __ bnez(t1, slow_path);
   }
 
@@ -888,7 +888,7 @@ void TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {
   __ sd(ProfileInterpreter ? t0 : zr, Address(sp, 6 * wordSize));
 
   // Get mirror and store it in the frame as GC root for this Method*
-/*#if INCLUDE_SHENANDOAHGC
+/*if INCLUDE_SHENANDOAHGC
   if (UseShenandoahGC) {
     __ load_mirror(x28, xmethod);
     __ sd(x28, Address(sp, 4 * wordSize));
@@ -1340,7 +1340,7 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     Label L, Continue;
     //__ safepoint_poll_acquire(L);
     {
-      int32_t offset;
+      int32_t offset=0;
       __ la_patchable(t1, SafepointSynchronize::address_of_state(), offset);
       __ lwu(t1, Address(t1, offset));
     }

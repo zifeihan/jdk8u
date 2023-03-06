@@ -43,7 +43,7 @@
 #include "c1/c1_Runtime1.hpp"
 #endif
 #ifdef COMPILER2
-#include "adfiles/ad_riscv64.hpp"
+//#include "adfiles/ad_riscv64.hpp"
 #include "opto/runtime.hpp"
 #endif
 

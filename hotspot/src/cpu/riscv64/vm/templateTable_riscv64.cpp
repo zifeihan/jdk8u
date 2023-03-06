@@ -2032,7 +2032,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
       __ bind(no_mdo);
       // Increment backedge counter in MethodCounters*
       __ ld(t0, Address(xmethod, Method::method_counters_offset()));
-      const Address mask(t0, in_bytes(MethodData::backedge_mask_offset()));
+      const Address mask(t0, in_bytes(MethodCounters::backedge_mask_offset()));
       __ increment_mask_and_jump(Address(t0, be_offset), increment, mask,
                                  x10, t1, false,
                                  UseOnStackReplacement ? &backedge_counter_overflow : &dispatch);
