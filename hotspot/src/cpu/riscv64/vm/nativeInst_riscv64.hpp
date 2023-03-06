@@ -53,7 +53,7 @@ class NativeInstruction {
   enum {
     instruction_size = 4
   };
-
+  bool is_dtrace_trap();
   juint encoding() const {
     return uint_at(0);
   }
