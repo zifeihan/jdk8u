@@ -464,7 +464,7 @@ address TemplateInterpreterGenerator::generate_return_entry_for(TosState state, 
   // Restore machine SP
   __ ld(t0, Address(xmethod, Method::const_offset()));
   __ lhu(t0, Address(t0, ConstMethod::max_stack_offset()));
-  __ addi(t0, t0, frame::interpreter_frame_monitor_size() + 2);
+  __ addi(t0, t0, frame::interpreter_frame_monitor_size() + (EnableInvokeDynamic ? 2 : 0));
   __ ld(t1,
         Address(fp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ slli(t0, t0, 3);
@@ -499,7 +499,7 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state,
   // Calculate stack limit
   __ ld(t0, Address(xmethod, Method::const_offset()));
   __ lhu(t0, Address(t0, ConstMethod::max_stack_offset()));
-  __ addi(t0, t0, frame::interpreter_frame_monitor_size() + 2);
+  __ addi(t0, t0, frame::interpreter_frame_monitor_size() + (EnableInvokeDynamic ? 2 : 0));
   __ ld(t1, Address(fp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ slli(t0, t0, 3);
   __ sub(t0, t1, t0);
@@ -916,7 +916,7 @@ void TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {
   // Move SP out of the way
   if (!native_call) {
     __ load_max_stack(t0, xmethod);
-    __ add(t0, t0, frame::interpreter_frame_monitor_size() + 2);
+    __ add(t0, t0, frame::interpreter_frame_monitor_size()  + (EnableInvokeDynamic ? 2 : 0));
     __ slli(t0, t0, 3);
     __ sub(t0, sp, t0);
     __ andi(sp, t0, -16);
@@ -1880,7 +1880,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   // Restore machine SP
   __ ld(t0, Address(xmethod, Method::const_offset()));
   __ lhu(t0, Address(t0, ConstMethod::max_stack_offset()));
-  __ add(t0, t0, frame::interpreter_frame_monitor_size() + 4);
+  __ add(t0, t0, frame::interpreter_frame_monitor_size() + (EnableInvokeDynamic ? 2 : 0) + 2);
   __ ld(t1, Address(fp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ slliw(t0, t0, 3);
   __ sub(t0, t1, t0);

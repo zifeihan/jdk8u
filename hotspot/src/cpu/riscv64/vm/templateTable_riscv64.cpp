@@ -3888,7 +3888,11 @@ void TemplateTable::invokeinterface(int byte_no) {
 void TemplateTable::invokehandle(int byte_no) {
   transition(vtos, vtos);
   assert(byte_no == f1_byte, "use this argument");
-
+  if (!EnableInvokeDynamic) {
+    // rewriter does not generate this bytecode
+    __ should_not_reach_here();
+    return;
+  }
   prepare_invoke(byte_no, xmethod, x10, x12);
   __ verify_method_ptr(x12);
   __ verify_oop(x12);
