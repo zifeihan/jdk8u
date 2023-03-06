@@ -143,5 +143,11 @@ class MethodCounters: public MetaspaceObj {
  // static ByteSize interpreter_backward_branch_limit_offset() {
  //   return byte_offset_of(MethodCounters, _interpreter_backward_branch_limit);
  // }
+   static ByteSize backedge_mask_offset() {
+    return byte_offset_of(MethodCounters, _backedge_mask);
+  }
+  static ByteSize invoke_mask_offset() {
+    return byte_offset_of(MethodCounters, _invoke_mask);
+  }
 };
 #endif //SHARE_VM_OOPS_METHODCOUNTERS_HPP
