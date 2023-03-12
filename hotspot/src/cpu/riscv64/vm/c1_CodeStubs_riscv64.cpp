@@ -25,7 +25,7 @@
  */
 
 #include "precompiled.hpp"
-#include "asm/macroAssembler.inline.hpp"
+//#include "asm/macroAssembler.inline.hpp"
 #include "c1/c1_CodeStubs.hpp"
 #include "c1/c1_FrameMap.hpp"
 #include "c1/c1_LIRAssembler.hpp"
@@ -34,7 +34,9 @@
 #include "nativeInst_riscv64.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "vmreg_riscv64.inline.hpp"
-
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
+#endif
 
 #define __ ce->masm()->
 
