@@ -54,10 +54,10 @@ SignatureHandlerGenerator(methodHandle method, CodeBuffer* buffer) : NativeSigna
   _num_fp_args = 0;
   _stack_offset = 0;
 }
-  SignatureHandlerGenerator(methodHandle method, CodeBuffer* buffer);
+ /* SignatureHandlerGenerator(methodHandle method, CodeBuffer* buffer);
   virtual ~SignatureHandlerGenerator() {
     _masm = NULL;
-  }
+  }*/
 
   // Code generation
   void generate(uint64_t fingerprint);
