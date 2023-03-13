@@ -801,7 +801,7 @@ static Klass* resolve_field_return_klass(methodHandle caller, int bci, TRAPS) {
 JRT_ENTRY(void, Runtime1::patch_code(JavaThread* thread, Runtime1::StubID stub_id ))
   NOT_PRODUCT(_patch_code_slowcase_cnt++;)
 
-#ifdef AARCH64
+#if defined(AARCH64) || defined(RISCV64)
   // AArch64 does not patch C1-generated code.
   ShouldNotReachHere();
 #endif

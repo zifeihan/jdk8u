@@ -47,7 +47,7 @@
 //#include "safepointMechanism_riscv64.hpp"
 #ifdef COMPILER2
 #include "opto/compile.hpp"
-#include "opto/intrinsicnode.hpp"
+//#include "opto/intrinsicnode.hpp"
 #include "opto/subnode.hpp"
 #include "opto/node.hpp"
 #endif
@@ -1151,7 +1151,7 @@ void MacroAssembler::pop_CPU_state() {
 }
 
 static int patch_offset_in_jal(address branch, int64_t offset) {
-  assert(is_imm_in_range(offset, 20, 1), "offset is too large to be patched in one jal insrusction!\n");
+  assert(Assembler::is_imm_in_range(offset, 20, 1), "offset is too large to be patched in one jal insrusction!\n");
   Assembler::patch(branch, 31, 31, (offset >> 20) & 0x1);                       // offset[20]    ==> branch[31]
   Assembler::patch(branch, 30, 21, (offset >> 1)  & 0x3ff);                     // offset[10:1]  ==> branch[30:21]
   Assembler::patch(branch, 20, 20, (offset >> 11) & 0x1);                       // offset[11]    ==> branch[20]
@@ -1160,7 +1160,7 @@ static int patch_offset_in_jal(address branch, int64_t offset) {
 }
 
 static int patch_offset_in_conditional_branch(address branch, int64_t offset) {
-  assert(is_imm_in_range(offset, 12, 1), "offset is too large to be patched in one beq/bge/bgeu/blt/bltu/bne insrusction!\n");
+  assert(Assembler::is_imm_in_range(offset, 12, 1), "offset is too large to be patched in one beq/bge/bgeu/blt/bltu/bne insrusction!\n");
   Assembler::patch(branch, 31, 31, (offset >> 12) & 0x1);                       // offset[12]    ==> branch[31]
   Assembler::patch(branch, 30, 25, (offset >> 5)  & 0x3f);                      // offset[10:5]  ==> branch[30:25]
   Assembler::patch(branch, 7,  7,  (offset >> 11) & 0x1);                       // offset[11]    ==> branch[7]
@@ -1583,7 +1583,7 @@ void MacroAssembler::grev(Register Rd, Register Rs, Register Rtmp1, Register Rtm
 }
 
 void MacroAssembler::andi(Register Rd, Register Rn, int64_t increment, Register tmp) {
-  if (is_imm_in_range(increment, 12, 0)) {
+  if (Assembler::is_imm_in_range(increment, 12, 0)) {
     and_imm12(Rd, Rn, increment);
   } else {
     assert_different_registers(Rn, tmp);
@@ -1597,7 +1597,7 @@ void MacroAssembler::orptr(Address adr, RegisterOrConstant src, Register tmp1, R
   if (src.is_register()) {
     orr(tmp1, tmp1, src.as_register());
   } else {
-    if(is_imm_in_range(src.as_constant(), 12, 0)) {
+    if(Assembler::is_imm_in_range(src.as_constant(), 12, 0)) {
       ori(tmp1, tmp1, src.as_constant());
     } else {
       assert_different_registers(tmp1, tmp2);
@@ -3067,7 +3067,7 @@ void MacroAssembler::check_klass_subtype_fast_path(Register sub_klass,
   add(t0, sub_klass, super_check_offset);
   Address super_check_addr(t0);
   ld(t0, super_check_addr); // load displayed supertype
- 
+
   // Ths check has worked decisively for primary supers.
   // Secondary supers are sought in the super_cache ('super_cache_addr').
   // (Secondary supers are interfaces and very deeply nested subtypes.)
@@ -3242,7 +3242,7 @@ void MacroAssembler::eden_allocate(Register obj,
                                    bool is_far) {
   assert_cond(masm != NULL);
   assert_different_registers(obj, var_size_in_bytes, tmp1);
-  if (!Universe::heap()->supports_inline_contig_alloc()) {
+  if (CMSIncrementalMode || !Universe::heap()->supports_inline_contig_alloc()) {
      j(slow_case);
   } else {
     Register end = tmp1;
@@ -3285,13 +3285,13 @@ void MacroAssembler::incr_allocated_bytes(Register var_size_in_bytes,
                                                int con_size_in_bytes,
                                                Register tmp1) {
   assert_cond(masm != NULL);
- assert(tmp1->is_valid(), "need temp reg");
+  assert(tmp1->is_valid(), "need temp reg");
  
    ld(tmp1, Address(xthread, in_bytes(JavaThread::allocated_bytes_offset())));
   if (var_size_in_bytes->is_valid()) {
     add(tmp1, tmp1, var_size_in_bytes);
   } else {
-     add(tmp1, tmp1, con_size_in_bytes);
+    add(tmp1, tmp1, con_size_in_bytes);
   }
    sd(tmp1, Address(xthread, in_bytes(JavaThread::allocated_bytes_offset())));
  }
