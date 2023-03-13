@@ -81,11 +81,16 @@
 
 #define REG_LR       1
 #define REG_FP       8
-
+#define NOINLINE __attribute__ ((noinline))
 NOINLINE address os::current_stack_pointer() {
   return (address)__builtin_frame_address(0);
 }
-
+bool os::supports_sse() {
+  return true;
+}
+bool os::is_allocatable(size_t bytes) {
+  return true;
+}
 char* os::non_memory_address_word() {
   // Must never look like an address returned by reserve_memory,
   return (char*) -1;
