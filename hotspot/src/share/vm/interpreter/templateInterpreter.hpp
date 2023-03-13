@@ -186,7 +186,7 @@ class TemplateInterpreter: public AbstractInterpreter {
   static bool    bytecode_should_reexecute(Bytecodes::Code code);
   // Compute the address for reexecution
   static address deopt_reexecute_entry(Method* method, address bcp);
-  static int InterpreterCodeSize;
+ // static int InterpreterCodeSize;
 
 #ifdef TARGET_ARCH_x86
 # include "templateInterpreter_x86.hpp"

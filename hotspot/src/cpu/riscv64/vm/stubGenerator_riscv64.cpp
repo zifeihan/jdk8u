@@ -259,9 +259,9 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
             __ membar(__ StoreStore);
           }
           __ BIND(L_loop);
-        //  __ add(count, count, start);
-        //  __ sb(zr, Address(count, 0));
-        //  __ addi(count, count, -1);//replace subs
+          __ add(t0, start, count);
+          __ sb(zr, Address(t0));
+          __ addi(count, count, -1);//replace subs
           __ bge(count, 0, L_loop);
         }
         break;

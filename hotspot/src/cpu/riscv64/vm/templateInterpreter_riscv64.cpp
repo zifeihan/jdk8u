@@ -25,7 +25,7 @@
  */
 
 #include "precompiled.hpp"
-#include "asm/macroAssembler.inline.hpp"
+//#include "asm/macroAssembler.inline.hpp"
 #include "asm/macroAssembler.hpp"
 //#include "barrierSetAssembler_riscv64.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
@@ -33,7 +33,7 @@
 //#include "interpreter/interp_masm.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
-#include "interpreter/templateInterpreterGenerator.hpp"
+//#include "interpreter/templateInterpreterGenerator.hpp"
 #include "interpreter/templateTable.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/arrayOop.hpp"
@@ -54,7 +54,7 @@
 #include "utilities/macros.hpp"
 #include <sys/types.h>
 #include "interpreter/interpreterGenerator.hpp"
-#include "interpreterGenerator_riscv64.hpp"
+//#include "templateInterpreter_riscv64.hpp"
 
 #ifndef PRODUCT
 #include "oops/method.hpp"
@@ -65,13 +65,221 @@
 // if too small.
 // Run with +PrintInterpreter to get the VM to print out the size.
 // Max size with JVMTI
-int TemplateInterpreter::InterpreterCodeSize = 256 * 1024;
+//int TemplateInterpreter::InterpreterCodeSize = 256 * 1024;
 #ifndef CC_INTERP
 #define __ _masm->
 
+int AbstractInterpreter::BasicType_as_index(BasicType type) {
+  int i = 0;
+  switch (type) {
+    case T_BOOLEAN: i = 0; break;
+    case T_CHAR   : i = 1; break;
+    case T_BYTE   : i = 2; break;
+    case T_SHORT  : i = 3; break;
+    case T_INT    : i = 4; break;
+    case T_LONG   : i = 5; break;
+    case T_VOID   : i = 6; break;
+    case T_FLOAT  : i = 7; break;
+    case T_DOUBLE : i = 8; break;
+    case T_OBJECT : i = 9; break;
+    case T_ARRAY  : i = 9; break;
+    default       : ShouldNotReachHere();
+  }
+  assert(0 <= i && i < AbstractInterpreter::number_of_result_handlers,
+         "index out of bounds");
+  return i;
+}
+
+// How much stack a method activation needs in words.
+int AbstractInterpreter::size_top_interpreter_activation(Method* method) {
+  const int entry_size = frame::interpreter_frame_monitor_size();
+
+  // total overhead size: entry_size + (saved fp thru expr stack
+  // bottom).  be sure to change this if you add/subtract anything
+  // to/from the overhead area
+  const int overhead_size =
+    -(frame::interpreter_frame_initial_sp_offset) + entry_size;
+
+  const int stub_code = frame::entry_frame_after_call_words;
+  assert_cond(method != NULL);
+  const int method_stack = (method->max_locals() + method->max_stack()) *
+                           Interpreter::stackElementWords;
+  return (overhead_size + method_stack + stub_code);
+}
+address AbstractInterpreterGenerator::generate_method_entry(
+                                        AbstractInterpreter::MethodKind kind) {
+  // determine code generation flags
+  bool synchronized = false;
+  address entry_point = NULL;
+
+  switch (kind) {
+  case Interpreter::zerolocals             :                                                                             break;
+  case Interpreter::zerolocals_synchronized: synchronized = true;                                                        break;
+  case Interpreter::native                 : entry_point = ((InterpreterGenerator*) this)->generate_native_entry(false); break;
+  case Interpreter::native_synchronized    : entry_point = ((InterpreterGenerator*) this)->generate_native_entry(true);  break;
+  case Interpreter::empty                  : entry_point = ((InterpreterGenerator*) this)->generate_empty_entry();       break;
+  case Interpreter::accessor               : entry_point = ((InterpreterGenerator*) this)->generate_accessor_entry();    break;
+  case Interpreter::abstract               : entry_point = ((InterpreterGenerator*) this)->generate_abstract_entry();    break;
+
+  case Interpreter::java_lang_math_sin     : // fall thru
+  case Interpreter::java_lang_math_cos     : // fall thru
+  case Interpreter::java_lang_math_tan     : // fall thru
+  case Interpreter::java_lang_math_abs     : // fall thru
+  case Interpreter::java_lang_math_log     : // fall thru
+  case Interpreter::java_lang_math_log10   : // fall thru
+  case Interpreter::java_lang_math_sqrt    : // fall thru
+  case Interpreter::java_lang_math_pow     : // fall thru
+  case Interpreter::java_lang_math_exp     : entry_point = ((InterpreterGenerator*) this)->generate_math_entry(kind);    break;
+  case Interpreter::java_lang_ref_reference_get
+                                           : entry_point = ((InterpreterGenerator*)this)->generate_Reference_get_entry(); break;
+  case Interpreter::java_util_zip_CRC32_update
+                                           : entry_point = ((InterpreterGenerator*)this)->generate_CRC32_update_entry();  break;
+  case Interpreter::java_util_zip_CRC32_updateBytes
+                                           : // fall thru
+  case Interpreter::java_util_zip_CRC32_updateByteBuffer
+                                           : entry_point = ((InterpreterGenerator*)this)->generate_CRC32_updateBytes_entry(kind); break;
+  default                                  : ShouldNotReachHere();                                                       break;
+  }
+
+  if (entry_point) {
+    return entry_point;
+  }
+
+  return ((InterpreterGenerator*) this)->
+                                generate_normal_entry(synchronized);
+}
+// asm based interpreter deoptimization helpers
+int AbstractInterpreter::size_activation(int max_stack,
+                                         int temps,
+                                         int extra_args,
+                                         int monitors,
+                                         int callee_params,
+                                         int callee_locals,
+                                         bool is_top_frame) {
+  // Note: This calculation must exactly parallel the frame setup
+  // in TemplateInterpreterGenerator::generate_method_entry.
+
+  // fixed size of an interpreter frame:
+  int overhead = frame::sender_sp_offset -
+                 frame::interpreter_frame_initial_sp_offset;
+  // Our locals were accounted for by the caller (or last_frame_adjust
+  // on the transistion) Since the callee parameters already account
+  // for the callee's params we only need to account for the extra
+  // locals.
+  int size = overhead +
+             (callee_locals - callee_params) +
+             monitors * frame::interpreter_frame_monitor_size() +
+             // On the top frame, at all times SP <= ESP, and SP is
+             // 16-aligned.  We ensure this by adjusting SP on method
+             // entry and re-entry to allow room for the maximum size of
+             // the expression stack.  When we call another method we bump
+             // SP so that no stack space is wasted.  So, only on the top
+             // frame do we need to allow max_stack words.
+             (is_top_frame ? max_stack : temps + extra_args);
+
+  // On riscv64 we always keep the stack pointer 16-aligned, so we
+  // must round up here.
+  size = round_to(size, 2);
+
+  return size;
+}
+bool AbstractInterpreter::can_be_compiled(methodHandle m) {
+  switch (method_kind(m)) {
+    case Interpreter::java_lang_math_sin     : // fall thru
+    case Interpreter::java_lang_math_cos     : // fall thru
+    case Interpreter::java_lang_math_tan     : // fall thru
+    case Interpreter::java_lang_math_abs     : // fall thru
+    case Interpreter::java_lang_math_log     : // fall thru
+    case Interpreter::java_lang_math_log10   : // fall thru
+    case Interpreter::java_lang_math_sqrt    : // fall thru
+    case Interpreter::java_lang_math_pow     : // fall thru
+    case Interpreter::java_lang_math_exp     :
+      return false;
+    default:
+      return true;
+  }
+}
+void AbstractInterpreter::layout_activation(Method* method,
+                                            int tempcount,
+                                            int popframe_extra_args,
+                                            int moncount,
+                                            int caller_actual_parameters,
+                                            int callee_param_count,
+                                            int callee_locals,
+                                            frame* caller,
+                                            frame* interpreter_frame,
+                                            bool is_top_frame,
+                                            bool is_bottom_frame) {
+  // The frame interpreter_frame is guaranteed to be the right size,
+  // as determined by a previous call to the size_activation() method.
+  // It is also guaranteed to be walkable even though it is in a
+  // skeletal state
+
+  assert_cond(method != NULL && caller != NULL && interpreter_frame != NULL);
+  int max_locals = method->max_locals() * Interpreter::stackElementWords;
+  int extra_locals = (method->max_locals() - method->size_of_parameters()) *
+    Interpreter::stackElementWords;
+
+#ifdef ASSERT
+  assert(caller->sp() == interpreter_frame->sender_sp(), "Frame not properly walkable");
+#endif
+
+  interpreter_frame->interpreter_frame_set_method(method);
+  // NOTE the difference in using sender_sp and
+  // interpreter_frame_sender_sp interpreter_frame_sender_sp is
+  // the original sp of the caller (the unextended_sp) and
+  // sender_sp is fp+8/16 (32bit/64bit)
+  //
+  // The interpreted method entry on riscv aligns SP to 16 bytes
+  // before generating the fixed part of the activation frame. So there
+  // may be a gap between the locals block and the saved sender SP. For
+  // an interpreted caller we need to recreate this gap and exactly
+  // align the incoming parameters with the caller's temporary
+  // expression stack. For other types of caller frame it doesn't
+  // matter.
+  intptr_t* locals = NULL;
+  if (caller->is_interpreted_frame()) {
+    locals = caller->interpreter_frame_last_sp() + caller_actual_parameters - 1;
+  } else {
+    locals = interpreter_frame->sender_sp() + max_locals - 1;
+  }
+
+#ifdef ASSERT
+  if (caller->is_interpreted_frame()) {
+    assert(locals < caller->fp() + frame::interpreter_frame_initial_sp_offset, "bad placement");
+  }
+#endif
+
+  interpreter_frame->interpreter_frame_set_locals(locals);
+  BasicObjectLock* montop = interpreter_frame->interpreter_frame_monitor_begin();
+  BasicObjectLock* monbot = montop - moncount;
+  interpreter_frame->interpreter_frame_set_monitor_end(monbot);
+
+  // Set last_sp
+  intptr_t* last_sp = (intptr_t*) monbot -
+    tempcount*Interpreter::stackElementWords -
+    popframe_extra_args;
+  interpreter_frame->interpreter_frame_set_last_sp(last_sp);
+
+  // All frames but the initial (oldest) interpreter frame we fill in have
+  // a value for sender_sp that allows walking the stack but isn't
+  // truly correct. Correct the value here.
+  if (extra_locals != 0 &&
+      interpreter_frame->sender_sp() ==
+      interpreter_frame->interpreter_frame_sender_sp()) {
+    interpreter_frame->set_interpreter_frame_sender_sp(caller->sp() +
+                                                       extra_locals);
+  }
+  *interpreter_frame->interpreter_frame_cache_addr() =
+    method->constants()->cache();
+  //*interpreter_frame->interpreter_frame_mirror_addr() =
+   // method->method_holder()->java_mirror();
+}
+
+
 //-----------------------------------------------------------------------------
 
-address AbstractInterpreterGenerator::generate_slow_signature_handler() {
+/*address AbstractInterpreterGenerator::generate_slow_signature_handler() {
   address entry = __ pc();
 
   __ andi(esp, esp, -16);
@@ -298,7 +506,7 @@ address InterpreterGenerator::generate_math_entry(AbstractInterpreter::MethodKin
       __ fmadd_s(f10, f10, f11, f12);
       __ mv(sp, x30); // Restore caller's SP
     }
-    break;*/
+    break;
   default:
     ;
   }
@@ -307,11 +515,11 @@ address InterpreterGenerator::generate_math_entry(AbstractInterpreter::MethodKin
   }
 
   return entry_point;
-}
+}*/
 
 // Abstract method entry
 // Attempt to execute abstract method. Throw exception
-address InterpreterGenerator::generate_abstract_entry(void) {
+/*address InterpreterGenerator::generate_abstract_entry(void) {
   // xmethod: Method*
   // x30: sender SP
 
@@ -332,7 +540,7 @@ address InterpreterGenerator::generate_abstract_entry(void) {
   __ should_not_reach_here();
 
   return entry_point;
-}
+}*/
 
 address TemplateInterpreterGenerator::generate_StackOverflowError_handler() {
   address entry = __ pc();
@@ -464,7 +672,7 @@ address TemplateInterpreterGenerator::generate_return_entry_for(TosState state, 
   // Restore machine SP
   __ ld(t0, Address(xmethod, Method::const_offset()));
   __ lhu(t0, Address(t0, ConstMethod::max_stack_offset()));
-  __ addi(t0, t0, frame::interpreter_frame_monitor_size() + (EnableInvokeDynamic ? 2 : 0));
+  __ addi(t0, t0, frame::interpreter_frame_monitor_size() + 2);
   __ ld(t1,
         Address(fp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ slli(t0, t0, 3);
@@ -815,7 +1023,7 @@ void InterpreterGenerator::lock_method() {
   __ mv(c_rarg1, esp); // object address
   __ lock_object(c_rarg1);
 }
-address InterpreterGenerator::generate_empty_entry(void) {
+/*address InterpreterGenerator::generate_empty_entry(void) {
   // rmethod: Method*
   // r13: sender sp must set sp to this value on return
 
@@ -848,7 +1056,7 @@ address InterpreterGenerator::generate_empty_entry(void) {
   return entry_point;
 
 }
-
+*/
 // Generate a fixed interpreter frame. This is identical setup for
 // interpreted methods and for native methods hence the shared code.
 //
@@ -1621,13 +1829,13 @@ address InterpreterGenerator::generate_normal_entry(bool synchronized) {
   __ mv(t1, true);
   __ sb(t1, do_not_unlock_if_synchronized);
 
-  Label no_mdp;
+  /*Label no_mdp;
   const Register mdp = x13;
   __ ld(mdp, Address(xmethod, Method::method_data_offset()));
   __ beqz(mdp, no_mdp);
   __ add(mdp, mdp, in_bytes(MethodData::data_offset()));
   __ profile_parameters_type(mdp, x11, x12, x14); // use x11, x12, x14 as tmp registers
-  __ bind(no_mdp);
+  __ bind(no_mdp);*/
 
   // increment invocation count & check for overflow
   Label invocation_counter_overflow;
@@ -1748,7 +1956,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   // Calculate stack limit
   __ ld(t0, Address(xmethod, Method::const_offset()));
   __ lhu(t0, Address(t0, ConstMethod::max_stack_offset()));
-  __ add(t0, t0, frame::interpreter_frame_monitor_size() + 4);
+  __ add(t0, t0, frame::interpreter_frame_monitor_size() + + (EnableInvokeDynamic ? 2 : 0) + 2);
   __ ld(t1, Address(fp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ slli(t0, t0, 3);
   __ sub(t0, t1, t0);
@@ -1857,7 +2065,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   assert(JavaThread::popframe_inactive == 0, "fix popframe_inactive");
 
 #if INCLUDE_JVMTI
-  {
+  if (EnableInvokeDynamic) {
     Label L_done;
 
     __ lbu(t0, Address(xbcp, 0));
@@ -1980,7 +2188,7 @@ void TemplateInterpreterGenerator::set_vtos_entry_points(Template* t,
   __ bind(L);
   generate_and_dispatch(t);
 }
-void Deoptimization::unwind_callee_save_values(frame* f, vframeArray* vframe_array) {
+/*void Deoptimization::unwind_callee_save_values(frame* f, vframeArray* vframe_array) {
 
   // This code is sort of the equivalent of C2IAdapter::setup_stack_frame back in
   // the days we had adapter frames. When we deoptimize a situation where a
@@ -1994,7 +2202,7 @@ void Deoptimization::unwind_callee_save_values(frame* f, vframeArray* vframe_arr
   // so this problem does not exist and this routine is just a place holder.
 
   assert(f->is_interpreted_frame(), "must be interpreted");
-}
+}*/
 //-----------------------------------------------------------------------------
 
 // Non-product code

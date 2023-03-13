@@ -2354,7 +2354,7 @@ void SharedRuntime::generate_deopt_blob() {
   __ addi(sp, sp, 2 * wordSize);
   // LR should now be the return address to the caller (3)
 
-#ifdef ASSERT
+//#ifdef ASSERT
   // Compilers generate code that bang the stack by as much as the
   // interpreter would need. So this stack banging should never
   // trigger a fault. Verify that it does not on non product builds.
@@ -2362,7 +2362,7 @@ void SharedRuntime::generate_deopt_blob() {
     __ lwu(x9, Address(x15, Deoptimization::UnrollBlock::total_frame_sizes_offset_in_bytes()));
     __ bang_stack_size(x9, x12);
   }
-#endif
+//#endif
   // Load address of array of frame pcs into x12
   __ ld(x12, Address(x15, Deoptimization::UnrollBlock::frame_pcs_offset_in_bytes()));
 
@@ -2734,8 +2734,8 @@ SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_t
   // No exception case
   __ bind(noException);
 
-  Label no_adjust, bail;
-  /*if (SafepointMechanism::uses_thread_local_poll() && !cause_return) {
+  /*Label no_adjust, bail;
+  if (SafepointMechanism::uses_thread_local_poll() && !cause_return) {
     // If our stashed return pc was modified by the runtime we avoid touching it
     __ ld(t0, Address(fp, wordSize));
     __ bne(x18, t0, no_adjust);
@@ -2758,18 +2758,18 @@ SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_t
     // Adjust return pc forward to step over the safepoint poll instruction
     __ add(x18, x18, NativeInstruction::instruction_size);
     __ sd(x18, Address(fp, wordSize));
-  }*/
+  }
 
-  __ bind(no_adjust);
+  __ bind(no_adjust);*/
   // Normal exit, restore registers and exit.
   RegisterSaver::restore_live_registers(masm);
 
   __ ret();
 
-#ifdef ASSERT
+/*#ifdef ASSERT
   __ bind(bail);
   __ stop("Attempting to adjust pc to skip safepoint poll but the return point is not what we expected");
-#endif
+#endif*/
 
   // Make sure all code is generated
   masm->flush();

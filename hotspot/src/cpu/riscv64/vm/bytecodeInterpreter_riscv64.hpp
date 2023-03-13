@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef CPU_AARCH64_VM_BYTECODEINTERPRETER_RISCV64_HPP
-#define CPU_AARCH64_VM_BYTECODEINTERPRETER_RISCV64_HPP
+#ifndef CPU_RISCV64_VM_BYTECODEINTERPRETER_RISCV64_HPP
+#define CPU_RISCV64_VM_BYTECODEINTERPRETER_RISCV64_HPP
 
 // Platform specific for C++ based Interpreter
 
@@ -114,4 +114,4 @@ inline intptr_t* sender_sp() {
 #define SET_LOCALS_LONG_FROM_ADDR(addr, offset) (((VMJavaVal64*)&locals[-((offset)+1)])->l = \
                                                 ((VMJavaVal64*)(addr))->l)
 
-#endif // CPU_AARCH64_VM_BYTECODEINTERPRETER_RISCV64_HPP
+#endif // CPU_RISCV64_VM_BYTECODEINTERPRETER_RISCV64_HPP

@@ -1632,12 +1632,13 @@ void MacroAssembler::movoop(Register dst, jobject obj, bool immediate) {
   if (obj == NULL) {
     oop_index = oop_recorder()->allocate_oop_index(obj);
   } else {
-#ifdef ASSERT
+//#ifdef ASSERT
     {
-      ThreadInVMfromUnknown tiv;
+  //    ThreadInVMfromUnknown tiv;
+      oop_index = oop_recorder()->find_index(obj);
       assert(Universe::heap()->is_in_reserved(JNIHandles::resolve(obj)), "should be real oop");
     }
-#endif
+//#endif
     oop_index = oop_recorder()->find_index(obj);
   }
   RelocationHolder rspec = oop_Relocation::spec(oop_index);
@@ -1818,6 +1819,9 @@ void MacroAssembler::access_store_at(BasicType type, DecoratorSet decorators,
 
 // Algorithm must match CompressedOops::encode.
 void MacroAssembler::encode_heap_oop(Register d, Register s) {
+#ifdef ASSERT
+ // verify_heapbase("MacroAssembler::encode_heap_oop: heap base corrupted?");
+#endif
   verify_oop(s, "broken oop in encode_heap_oop");
   if (Universe::narrow_oop_base() == NULL) {
     if (Universe::narrow_oop_shift() != 0) {
@@ -2224,7 +2228,7 @@ void MacroAssembler::g1_write_barrier_post(Register store_addr,
 
    ld(tmp2, buffer);
    add(t0, tmp2, t0);
-   sd(card_addr, Address(tmp2, 0));
+   sd(card_addr, Address(t0, 0));
    j(done);
 
    bind(runtime);
@@ -3273,7 +3277,7 @@ void MacroAssembler::eden_allocate(Register obj,
     // If heap_top hasn't been changed by some other thread, update it.
      sc_d(t1, end, t2, Assembler::rl);
     bnez(t1, retry);
-   incr_allocated_bytes( var_size_in_bytes, con_size_in_bytes, tmp1);
+   //incr_allocated_bytes( var_size_in_bytes, con_size_in_bytes, tmp1);
   }
  }
 
@@ -3414,16 +3418,17 @@ address MacroAssembler::read_polling_page(Register r, int32_t offset, relocInfo:
 }
 
 void  MacroAssembler::set_narrow_oop(Register dst, jobject obj) {
-#ifdef ASSERT
+//#ifdef ASSERT
   {
-    ThreadInVMfromUnknown tiv;
+  //  ThreadInVMfromUnknown tiv;
     assert (UseCompressedOops, "should only be used for compressed oops");
     assert (Universe::heap() != NULL, "java heap should be initialized");
     assert (oop_recorder() != NULL, "this assembler needs an OopRecorder");
-    assert(Universe::heap()->is_in_reserved(JNIHandles::resolve(obj)), "should be real oop");
+   // assert(Universe::heap()->is_in_reserved(JNIHandles::resolve(obj)), "should be real oop");
   }
-#endif
+//#endif
   int oop_index = oop_recorder()->find_index(obj);
+  assert(Universe::heap()->is_in_reserved(JNIHandles::resolve(obj)), "should be real oop");
   InstructionMark im(this);
   RelocationHolder rspec = oop_Relocation::spec(oop_index);
   code_section()->relocate(inst_mark(), rspec);

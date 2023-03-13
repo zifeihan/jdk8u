@@ -304,7 +304,7 @@ void InterpreterMacroAssembler::load_resolved_reference_at_index(
  // addi(tmp, tmp, arrayOopDesc::base_offset_in_bytes(T_OBJECT) >> LogBytesPerHeapOop);
   //slli(tmp, tmp, LogBytesPerHeapOop);
   add(result, result, tmp);
-  load_heap_oop(result, Address(result, arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
+  load_heap_oop_rv(result, Address(result, arrayOopDesc::base_offset_in_bytes(T_OBJECT)));
 }
 
 
@@ -490,7 +490,7 @@ void InterpreterMacroAssembler::jump_from_interpreted(Register method) {
     // JVMTI events, such as single-stepping, are implemented partly by avoiding running
     // compiled code in threads for which the event is enabled.  Check here for
     // interp_only_mode if these events CAN be enabled.
-    lwu(t0, Address(xthread, JavaThread::interp_only_mode_offset()));
+    ld(t0, Address(xthread, JavaThread::interp_only_mode_offset()));
     beqz(t0, run_compiled_code);
     ld(t0, Address(method, Method::interpreter_entry_offset()));
     jr(t0);
@@ -1850,7 +1850,7 @@ void InterpreterMacroAssembler::profile_return_type(Register mdp, Register ret, 
       // type because we're right after it and we don't known its
       // length
       Label do_profile;
-      lb(t0, Address(xbcp, 0));
+      lbu(t0, Address(xbcp, 0));
       li(tmp, Bytecodes::_invokedynamic);
       beq(t0, tmp, do_profile);
       li(tmp, Bytecodes::_invokehandle);
