@@ -149,7 +149,7 @@ inline bool frame::is_older(intptr_t* id) const   { assert(this->id() != NULL &&
 inline intptr_t* frame::link() const              { return (intptr_t*) *(intptr_t **)addr_at(link_offset); }
 
 inline intptr_t* frame::unextended_sp() const     { return _unextended_sp; }
-
+inline void      frame::set_link(intptr_t* addr)  { *(intptr_t **)addr_at(link_offset) = addr; }
 // Return address
 inline address* frame::sender_pc_addr() const     { return (address*) addr_at(return_addr_offset); }
 inline address  frame::sender_pc() const          { return *sender_pc_addr(); }
@@ -275,7 +275,21 @@ inline int frame::interpreter_frame_monitor_size() {
   return BasicObjectLock::size();
 }
 
+inline int frame::local_offset_for_compiler(int local_index, int nof_args, int max_nof_locals, int max_nof_monitors) {
+  return (nof_args - local_index + (local_index < nof_args ? 1: -1));
+}
 
+inline int frame::monitor_offset_for_compiler(int local_index, int nof_args, int max_nof_locals, int max_nof_monitors) {
+  return local_offset_for_compiler(local_index, nof_args, max_nof_locals, max_nof_monitors);
+}
+
+inline int frame::min_local_offset_for_compiler(int nof_args, int max_nof_locals, int max_nof_monitors) {
+  return (nof_args - (max_nof_locals + max_nof_monitors*2) - 1);
+}
+
+inline bool frame::volatile_across_calls(Register reg) {
+  return true;
+}
 // expression stack
 // (the max_stack arguments are used by the GC; see class FrameClosure)
 

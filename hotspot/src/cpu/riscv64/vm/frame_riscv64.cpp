@@ -231,8 +231,7 @@ bool frame::safe_for_sender(JavaThread *thread) {
  if (sender_blob->is_nmethod()) {
     nmethod* nm = sender_blob->as_nmethod_or_null();
     if (nm != NULL) {
-      if (nm->is_deopt_mh_entry(sender_pc) || nm->is_deopt_entry(sender_pc) ||
-          nm->method()->is_method_handle_intrinsic()) {
+      if (nm->is_deopt_mh_entry(sender_pc) || nm->is_deopt_entry(sender_pc) ) {
         return false;
       }
     }
@@ -421,7 +420,7 @@ void frame::adjust_unextended_sp() {
   // as any other call site. Therefore, no special action is needed when we are
   // returning to any of these call sites.
 
-  if (_cb != NULL) {
+  /*if (_cb != NULL) {
     nmethod* sender_cm = _cb->as_nmethod_or_null();
     if (sender_cm != NULL) {
       // If the sender PC is a deoptimization point, get the original PC.
@@ -429,6 +428,22 @@ void frame::adjust_unextended_sp() {
           sender_cm->is_deopt_mh_entry(_pc)) {
         DEBUG_ONLY(verify_deopt_original_pc(sender_cm, _unextended_sp));
       }
+    }
+  }*/
+  nmethod* sender_nm = (_cb == NULL) ? NULL : _cb->as_nmethod_or_null();
+  if (sender_nm != NULL) {
+    // If the sender PC is a deoptimization point, get the original
+    // PC.  For MethodHandle call site the unextended_sp is stored in
+    // saved_fp.
+    if (sender_nm->is_deopt_mh_entry(_pc)) {
+      DEBUG_ONLY(verify_deopt_mh_original_pc(sender_nm, _fp));
+      _unextended_sp = _fp;
+    }
+    else if (sender_nm->is_deopt_entry(_pc)) {
+      DEBUG_ONLY(verify_deopt_original_pc(sender_nm, _unextended_sp));
+    }
+    else if (sender_nm->is_method_handle_return(_pc)) {
+      _unextended_sp = _fp;
     }
   }
 }
@@ -707,7 +722,7 @@ frame::frame(void* ptr_sp, void* ptr_fp, void* pc) {
   init((intptr_t*)ptr_sp, (intptr_t*)ptr_fp, (address)pc);
 }
 
-void pd_ps(frame f) {}
+//void pd_ps(frame f) {}
 #endif
 
 void JavaFrameAnchor::make_walkable(JavaThread* thread) {
