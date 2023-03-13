@@ -69,7 +69,7 @@ void MethodHandles::verify_klass(MacroAssembler* _masm,
                                  const char* error_message) {
   assert_cond(_masm != NULL);
   Klass** klass_addr = SystemDictionary::well_known_klass_addr(klass_id);
-  Klass* klass = SystemDictionary::well_known_klass(klass_id);
+  KlassHandle klass = SystemDictionary::well_known_klass(klass_id);
   Register temp = t1;
   Register temp2 = t0; // used by MacroAssembler::cmpptr
   Label L_ok, L_bad;
@@ -197,7 +197,7 @@ address MethodHandles::generate_method_handle_interpreter_entry(MacroAssembler* 
 
     Label L;
     BLOCK_COMMENT("verify_intrinsic_id {");
-    __ lhu(t0, Address(xmethod, Method::intrinsic_id_offset_in_bytes()));
+    __ lbu(t0, Address(xmethod, Method::intrinsic_id_offset_in_bytes()));
     __ mv(t1, (int) iid);
     __ beq(t0, t1, L);
     if (iid == vmIntrinsics::_linkToVirtual ||
@@ -312,8 +312,8 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
       if (VerifyMethodHandles && iid != vmIntrinsics::_linkToInterface) {
         Label L_ok;
         Register temp2_defc = temp2;
-        //__ load_heap_oop_rv(temp2_defc, member_clazz);
-        __ load_heap_oop(temp2_defc, member_clazz, temp3);
+        __ load_heap_oop_rv(temp2_defc, member_clazz);
+        //__ load_heap_oop(temp2_defc, member_clazz, temp3);
         load_klass_from_Class(_masm, temp2_defc);
         __ verify_klass_ptr(temp2_defc);
         __ check_klass_subtype(temp1_recv_klass, temp2_defc, temp3, L_ok);
@@ -343,6 +343,7 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
       __ load_heap_oop(xmethod, member_vmtarget);
       //__ access_load_at(T_ADDRESS, IN_HEAP, xmethod, vmtarget_method, noreg, noreg);
      // __ ld(xmethod, member_vmtarget);
+        __ ld(xmethod, member_vmtarget);
       break;
 
     case vmIntrinsics::_linkToStatic:
@@ -352,6 +353,7 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
       __ load_heap_oop(xmethod, member_vmtarget);
       //__ access_load_at(T_ADDRESS, IN_HEAP, xmethod, vmtarget_method, noreg, noreg);
      // __ ld(xmethod, member_vmtarget);
+        __ ld(xmethod, member_vmtarget);
       break;
 
     case vmIntrinsics::_linkToVirtual:
@@ -367,6 +369,8 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
       Register temp2_index = temp2;
       __ access_load_at(T_ADDRESS, IN_HEAP, temp2_index, member_vmindex, noreg, noreg);
       //__ ld(temp2_index, member_vmindex);
+      //__ access_load_at(T_ADDRESS, IN_HEAP, temp2_index, member_vmindex, noreg, noreg);
+        __ ld(temp2_index, member_vmindex);
 
       if (VerifyMethodHandles) {
         Label L_index_ok;

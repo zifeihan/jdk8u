@@ -26,6 +26,7 @@
 
 #include "precompiled.hpp"
 #include "asm/macroAssembler.inline.hpp"
+#include "asm/macroAssembler.hpp"
 //#include "barrierSetAssembler_riscv64.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
 #include "interpreter/bytecodeTracer.hpp"
@@ -65,7 +66,7 @@
 // Run with +PrintInterpreter to get the VM to print out the size.
 // Max size with JVMTI
 int TemplateInterpreter::InterpreterCodeSize = 256 * 1024;
-
+#ifndef CC_INTERP
 #define __ _masm->
 
 //-----------------------------------------------------------------------------
@@ -444,13 +445,13 @@ address TemplateInterpreterGenerator::generate_return_entry_for(TosState state, 
   __ restore_constant_pool_cache();
   __ get_method(xmethod);
 
-  if (state == atos) {
+  /*if (state == atos) {
     Register obj = x10;
     Register mdp = x11;
     Register tmp = x12;
     __ ld(mdp, Address(xmethod, Method::method_data_offset()));
     __ profile_return_type(mdp, obj, tmp);
-  }
+  }*/
 
   // Pop N words from the stack
   __ get_cache_and_index_at_bcp(x11, x12, 1, index_size);
@@ -463,15 +464,15 @@ address TemplateInterpreterGenerator::generate_return_entry_for(TosState state, 
   // Restore machine SP
   __ ld(t0, Address(xmethod, Method::const_offset()));
   __ lhu(t0, Address(t0, ConstMethod::max_stack_offset()));
-  __ addi(t0, t0, frame::interpreter_frame_monitor_size() + 2);
+  __ addi(t0, t0, frame::interpreter_frame_monitor_size() + (EnableInvokeDynamic ? 2 : 0));
   __ ld(t1,
         Address(fp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ slli(t0, t0, 3);
   __ sub(t0, t1, t0);
   __ andi(sp, t0, -16);
 
- __ check_and_handle_popframe(xthread);
- __ check_and_handle_earlyret(xthread);
+ //__ check_and_handle_popframe(xthread);
+ //__ check_and_handle_earlyret(xthread);
 
   __ get_dispatch();
   __ dispatch_next(state, step);
@@ -498,7 +499,7 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state,
   // Calculate stack limit
   __ ld(t0, Address(xmethod, Method::const_offset()));
   __ lhu(t0, Address(t0, ConstMethod::max_stack_offset()));
-  __ addi(t0, t0, frame::interpreter_frame_monitor_size() + 2);
+  __ addi(t0, t0, frame::interpreter_frame_monitor_size() + (EnableInvokeDynamic ? 2 : 0));
   __ ld(t1, Address(fp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ slli(t0, t0, 3);
   __ sub(t0, t1, t0);
@@ -519,7 +520,7 @@ address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state,
     __ should_not_reach_here();
     __ bind(L);
   }
-
+    __ dispatch_next(state, step);
   /*if (continuation == NULL) {
     __ dispatch_next(state, step);
   } else {
@@ -590,7 +591,7 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
                                      MethodCounters::invocation_counter_offset() +
                                      InvocationCounter::counter_offset());
     __ get_method_counters(xmethod, t1, done);
-    const Address mask(t1, in_bytes(MethodData::invoke_mask_offset()));
+    const Address mask(t1, in_bytes(MethodCounters::invoke_mask_offset()));
     __ increment_mask_and_jump(invocation_counter, increment, mask, t0, x11, false, overflow);
     __ bind(done);
   } else { // not TieredCompilation
@@ -623,9 +624,11 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
 
     if (ProfileInterpreter && profile_method != NULL) {
       // Test to see if we should create a method data oop
-      __ ld(t1, Address(xmethod, Method::method_counters_offset()));
+      int32_t offset=0 ;
+     // __ ld(t1, Address(xmethod, Method::method_counters_offset()));
       //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
-      __ la(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit)); 
+      __ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
+      __ lwu(t1, Address(t1, offset));
       __ blt(x10, t1, *profile_method_continue);
 
       // if no method data exists, go to profile_method
@@ -633,9 +636,12 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
     }
 
     {
-      __ ld(t1, Address(xmethod, Method::method_counters_offset()));
+      //__ ld(t1, Address(xmethod, Method::method_counters_offset()));
       //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_invocation_limit_offset())));
-      __ la(t1, ExternalAddress((address) &InvocationCounter::InterpreterInvocationLimit)); 
+     // __ la(t1, ExternalAddress((address) &InvocationCounter::InterpreterInvocationLimit)); 
+     int32_t offset=0 ;
+      __ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
+      __ lwu(t1, Address(t1, offset));
       __ bltu(x10, t1, done);
       __ j(*overflow); // offset is too large so we have to use j instead of bgeu here
     }
@@ -692,19 +698,37 @@ void InterpreterGenerator::generate_stack_overflow_check(void) {
   __ slli(t0, x13, Interpreter::logStackElementSize);
   __ add(x10, x10, t0);  // 2 slots per parameter.
 
-  const Address stack_limit(xthread, JavaThread::stack_overflow_limit_offset());
-  __ ld(t0, stack_limit);
+ // const Address stack_limit(xthread, JavaThread::stack_overflow_limit_offset());
+  const Address stack_base(xthread, Thread::stack_base_offset());
+  const Address stack_size(xthread, Thread::stack_size_offset());
+  __ ld(t0, stack_base);
+  __ ld(t1, stack_size);
 
 #ifdef ASSERT
-  Label limit_okay;
+  //Label limit_okay;
+  Label stack_base_okay, stack_size_okay;
   // Verify that thread stack limit is non-zero.
-  __ bnez(t0, limit_okay);
+ /* __ bnez(t0, limit_okay);
   __ stop("stack overflow limit is zero");
-  __ bind(limit_okay);
+  __ bind(limit_okay);*/
+
+  __ bnez(t0, stack_base_okay);
+  __ stop("stack base is zero");
+  __ bind(stack_base_okay);
+  // verify that thread stack size is non-zero
+  __ bnez(t1, stack_size_okay);
+  __ stop("stack size is zero");
+  __ bind(stack_size_okay);
 #endif
 
   // Add stack limit to locals.
+  __ sub(t0, t0, t1);
   __ add(x10, x10, t0);
+  const int max_pages = StackShadowPages > (StackRedPages+StackYellowPages) ? StackShadowPages :
+                                                                              (StackRedPages+StackYellowPages);
+
+  // add in the red and yellow zone sizes
+  __ add(x10, x10, max_pages * page_size * 2);
 
   // Check against the current stack bottom.
   __ bgtu(sp, x10, after_frame_check);
@@ -804,11 +828,11 @@ address InterpreterGenerator::generate_empty_entry(void) {
   // If we need a safepoint check, generate full interpreter entry.
   Label slow_path;
   {
-    int32_t offset;
+    int32_t offset=0;
     assert(SafepointSynchronize::_not_synchronized == 0,
            "SafepointSynchronize::_not_synchronized");
     __ la_patchable(t1, SafepointSynchronize::address_of_state(), offset);
-    __ ld(t1, Address(t1, offset));
+    __ lwu(t1, Address(t1, offset));
     __ bnez(t1, slow_path);
   }
 
@@ -864,7 +888,7 @@ void TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {
   __ sd(ProfileInterpreter ? t0 : zr, Address(sp, 6 * wordSize));
 
   // Get mirror and store it in the frame as GC root for this Method*
-/*#if INCLUDE_SHENANDOAHGC
+/*if INCLUDE_SHENANDOAHGC
   if (UseShenandoahGC) {
     __ load_mirror(x28, xmethod);
     __ sd(x28, Address(sp, 4 * wordSize));
@@ -892,7 +916,7 @@ void TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {
   // Move SP out of the way
   if (!native_call) {
     __ load_max_stack(t0, xmethod);
-    __ add(t0, t0, frame::interpreter_frame_monitor_size() + 2);
+    __ add(t0, t0, frame::interpreter_frame_monitor_size()  + (EnableInvokeDynamic ? 2 : 0));
     __ slli(t0, t0, 3);
     __ sub(t0, sp, t0);
     __ andi(sp, t0, -16);
@@ -939,12 +963,12 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
   // x30: senderSP must preserve for slow path, set SP to it on fast path
 
   // LR is live.  It must be saved around calls.
-
+#if INCLUDE_ALL_GCS
   address entry = __ pc();
 
   const int referent_offset = java_lang_ref_Reference::referent_offset;
   guarantee(referent_offset > 0, "referent offset not initialized");
-
+if (UseG1GC) {
   Label slow_path;
   const Register local_0 = c_rarg0;
   // Check if local 0 != NULL
@@ -976,8 +1000,16 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
 
   // generate a vanilla interpreter entry as the slow path
   __ bind(slow_path);
-  __ jump_to_entry(Interpreter::entry_for_kind(Interpreter::zerolocals));
-  return entry;
+  //__ jump_to_entry(Interpreter::entry_for_kind(Interpreter::zerolocals));
+//return entry;
+  (void) generate_normal_entry(false);
+
+    return entry;
+  }
+#endif // INCLUDE_ALL_GCS
+  // If G1 is not enabled then attempt to go through the accessor entry point
+  // Reference.get is an accessor
+  return generate_accessor_entry();
 }
 
 /**
@@ -1041,7 +1073,7 @@ void InterpreterGenerator::generate_counter_overflow(Label* do_continue) {
 // native method than the typical interpreter frame setup.
 address InterpreterGenerator::generate_native_entry(bool synchronized) {
   // determine code generation flags
-  bool inc_counter  = UseCompiler || CountCompiledCalls || LogTouchedMethods;
+  bool inc_counter  = UseCompiler || CountCompiledCalls;
 
   // x11: Method*
   // x30: sender sp
@@ -1304,9 +1336,16 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
   }
 
   // check for safepoint operation in progress and/or pending suspend requests
-  /*{
+  {
     Label L, Continue;
-    __ safepoint_poll_acquire(L);
+    //__ safepoint_poll_acquire(L);
+    {
+      int32_t offset=0;
+      __ la_patchable(t1, SafepointSynchronize::address_of_state(), offset);
+      __ lwu(t1, Address(t1, offset));
+    }
+    assert(SafepointSynchronize::_not_synchronized == 0,
+           "SafepointSynchronize::_not_synchronized");
     __ lwu(t1, Address(xthread, JavaThread::suspend_flags_offset()));
     __ beqz(t1, Continue);
     __ bind(L);
@@ -1323,7 +1362,7 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     __ get_method(xmethod);
     __ reinit_heapbase();
     __ bind(Continue);
-  }*/
+  }
 
   // change thread state
   // Force all preceding writes to be observed prior to thread state change
@@ -1495,7 +1534,7 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
 address InterpreterGenerator::generate_normal_entry(bool synchronized) {
 
   // determine code generation flags
-  const bool inc_counter  = UseCompiler || CountCompiledCalls || LogTouchedMethods;
+  const bool inc_counter  = UseCompiler || CountCompiledCalls;
 
   // t0: sender sp
   address entry_point = __ pc();
@@ -1841,7 +1880,7 @@ void TemplateInterpreterGenerator::generate_throw_exception() {
   // Restore machine SP
   __ ld(t0, Address(xmethod, Method::const_offset()));
   __ lhu(t0, Address(t0, ConstMethod::max_stack_offset()));
-  __ add(t0, t0, frame::interpreter_frame_monitor_size() + 4);
+  __ add(t0, t0, frame::interpreter_frame_monitor_size() + (EnableInvokeDynamic ? 2 : 0) + 2);
   __ ld(t1, Address(fp, frame::interpreter_frame_initial_sp_offset * wordSize));
   __ slliw(t0, t0, 3);
   __ sub(t0, t1, t0);
@@ -2011,5 +2050,6 @@ void TemplateInterpreterGenerator::stop_interpreter_at() {
   __ bind(L);
   __ pop_reg(t0);
 }
-
+#endif // CC_INTERP
 #endif // !PRODUCT
+

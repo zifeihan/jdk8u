@@ -33,7 +33,7 @@
 #include "interpreter/interpreter.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/compiledICHolder.hpp"
-#include "safepointMechanism_riscv64.hpp"
+//#include "safepointMechanism_riscv64.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/vframeArray.hpp"
 #include "utilities/align.hpp"
@@ -476,7 +476,7 @@ static void gen_c2i_adapter(MacroAssembler *masm,
   __ jr(t0);
 }
 
-void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm,
+static void gen_i2c_adapter(MacroAssembler *masm,
                                     int total_args_passed,
                                     int comp_args_on_stack,
                                     const BasicType *sig_bt,
@@ -1684,7 +1684,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     }
 
     // Load (object->mark() | 1) into swap_reg % x10
-    __ ld(t0, Address(obj_reg, oopDesc::mark_offset_in_bytes()));
+    __ ld(t0, Address(obj_reg, 0));
     __ ori(swap_reg, t0, 1);
 
     // Save (object->mark() | 1) into BasicLock's displaced header
@@ -1803,7 +1803,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   Label safepoint_in_progress, safepoint_in_progress_done;
   {
     assert(SafepointSynchronize::_not_synchronized == 0, "fix this code");
-    int32_t offset;
+    int32_t offset=0;
     //__ safepoint_poll_acquire(safepoint_in_progress);
     __ la_patchable(t0,
             ExternalAddress((address)SafepointSynchronize::address_of_state()),
@@ -2112,7 +2112,30 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
   return nm;
 }
+#ifdef HAVE_DTRACE_H
+// ---------------------------------------------------------------------------
+// Generate a dtrace nmethod for a given signature.  The method takes arguments
+// in the Java compiled code convention, marshals them to the native
+// abi and then leaves nops at the position you would expect to call a native
+// function. When the probe is enabled the nops are replaced with a trap
+// instruction that dtrace inserts and the trace will cause a notification
+// to dtrace.
+//
+// The probes are only able to take primitive types and java/lang/String as
+// arguments.  No other java types are allowed. Strings are converted to utf8
+// strings so that from dtrace point of view java strings are converted to C
+// strings. There is an arbitrary fixed limit on the total space that a method
+// can use for converting the strings. (256 chars per string in the signature).
+// So any java string larger then this is truncated.
 
+static int  fp_offset[ConcreteRegisterImpl::number_of_registers] = { 0 };
+static bool offsets_initialized = false;
+
+
+nmethod *SharedRuntime::generate_dtrace_nmethod(MacroAssembler *masm,
+                                                methodHandle method) { Unimplemented(); return 0; }
+
+#endif // HAVE_DTRACE_H
 // this function returns the adjust size (in number of words) to a c2i adapter
 // activation for use during deoptimization
 int Deoptimization::last_frame_adjust(int callee_parameters, int callee_locals) {
@@ -2273,7 +2296,6 @@ void SharedRuntime::generate_deopt_blob() {
   }
 #endif // ASSERT
   __ mv(c_rarg0, xthread);
-  __ mv(c_rarg1, xcpool);
   int32_t offset = 0;
   __ la_patchable(t0, RuntimeAddress(CAST_FROM_FN_PTR(address, Deoptimization::fetch_unroll_info)), offset);
   __ jalr(x1, t0, offset);
@@ -2288,7 +2310,7 @@ void SharedRuntime::generate_deopt_blob() {
   // Load UnrollBlock* into x15
   __ mv(x15, x10);
 
-  __ lwu(xcpool, Address(x15, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
+  //__ lwu(xcpool, Address(x15, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
   Label noException;
   __ li(t0, Deoptimization::Unpack_exception);
   __ bne(xcpool, t0, noException); // Was exception pending?
@@ -2484,7 +2506,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   // n.b. 3 gp args, 0 fp args, integral return type
 
   __ mv(c_rarg0, xthread);
-  __ mvw(c_rarg2, (unsigned)Deoptimization::Unpack_uncommon_trap);
+  //__ mvw(c_rarg2, (unsigned)Deoptimization::Unpack_uncommon_trap);
   int32_t offset = 0;
   __ la_patchable(t0,
         RuntimeAddress(CAST_FROM_FN_PTR(address,
@@ -2506,7 +2528,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   // move UnrollBlock* into x14
   __ mv(x14, x10);
 
-#ifdef ASSERT
+/*#ifdef ASSERT
   { Label L;
     __ lwu(t0, Address(x14, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
     __ mvw(t1, Deoptimization::Unpack_uncommon_trap);
@@ -2514,7 +2536,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
     __ stop("SharedRuntime::generate_deopt_blob: last_Java_fp not cleared");
     __ bind(L);
   }
-#endif
+#endif*/
 
   // Pop all the frames we must move/replace.
   //
@@ -2536,7 +2558,6 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   __ addi(sp, sp, 2 * wordSize);
   // LR should now be the return address to the caller (3) frame
 
-#ifdef ASSERT
   // Compilers generate code that bang the stack by as much as the
   // interpreter would need. So this stack banging should never
   // trigger a fault. Verify that it does not on non product builds.
@@ -2546,7 +2567,6 @@ void SharedRuntime::generate_uncommon_trap_blob() {
                         total_frame_sizes_offset_in_bytes()));
     __ bang_stack_size(x11, x12);
   }
-#endif
 
   // Load address of array of frame pcs into x12 (address*)
   __ ld(x12, Address(x14,

@@ -38,18 +38,24 @@
 #include "oops/klass.inline.hpp"
 #include "oops/oop.hpp"
 #include "runtime/biasedLocking.hpp"
+#include "runtime/interfaceSupport.hpp"
 //#include "runtime/interfaceSupport.inline.hpp"
 //#include "runtime/jniHandles.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/thread.hpp"
 #include "utilities/macros.hpp"
-#include "safepointMechanism_riscv64.hpp"
+//#include "safepointMechanism_riscv64.hpp"
 #ifdef COMPILER2
 #include "opto/compile.hpp"
 //#include "opto/intrinsicnode.hpp"
 #include "opto/subnode.hpp"
+#include "opto/node.hpp"
 #endif
-
+#if INCLUDE_ALL_GCS
+#include "gc_implementation/g1/g1CollectedHeap.inline.hpp"
+#include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
+#include "gc_implementation/g1/heapRegion.hpp"
+#endif
 #ifdef PRODUCT
 #define BLOCK_COMMENT(str) /* nothing */
 #else
@@ -2055,7 +2061,7 @@ void MacroAssembler::store_check_part_2(Register obj) {
   add(t0, obj, t0);
   sb(zr, Address(t0, 0));
 }
-
+#if INCLUDE_ALL_GCS
 void MacroAssembler::g1_write_barrier_pre(Register obj,
                                           Register pre_val,
                                           Register thread,
@@ -2201,7 +2207,7 @@ void MacroAssembler::g1_write_barrier_post(Register store_addr,
   assert((int)CardTableModRefBS::dirty_card_val() == 0, "must be 0");
 
    //fence(MacroAssembler::MacroAssembler::StoreLoad);
-   membar(Assembler::Assembler::StoreLoad);
+   membar(MacroAssembler::MacroAssembler::StoreLoad);
 
    lbu(tmp2, Address(card_addr));
    beqz(tmp2, done);
@@ -2229,7 +2235,7 @@ void MacroAssembler::g1_write_barrier_post(Register store_addr,
 
    bind(done);
 }
-
+#endif //INCLUDE_ALL_GCS
 int MacroAssembler::corrected_idivl(Register result, Register ra, Register rb,
                                     bool want_remainder)
 {

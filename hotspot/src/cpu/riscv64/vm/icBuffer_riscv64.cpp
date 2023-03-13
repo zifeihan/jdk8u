@@ -33,6 +33,7 @@
 #include "memory/resourceArea.hpp"
 #include "nativeInst_riscv64.hpp"
 #include "oops/oop.inline.hpp"
+#include "oops/oop.inline2.hpp"
 
 int InlineCacheBuffer::ic_stub_code_size() {
   // 6: auipc + ld + auipc + jalr + address(2 * instruction_size)

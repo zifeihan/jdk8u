@@ -366,15 +366,13 @@ JNIEXPORT jlongArray JNICALL Java_sun_jvm_hotspot_debugger_linux_LinuxDebuggerLo
 #ifdef aarch64
 #define NPRGREG sun_jvm_hotspot_debugger_aarch64_AARCH64ThreadContext_NPRGREG
 #endif
-#ifdef riscv64
+#ifdef RISCV64
 #define NPRGREG sun_jvm_hotspot_debugger_riscv64_RISCV64ThreadContext_NPRGREG
 #endif
 #if defined(sparc) || defined(sparcv9)
 #define NPRGREG sun_jvm_hotspot_debugger_sparc_SPARCThreadContext_NPRGREG
 #endif
-#ifdef RISCV64
-#define NPRGREG sun_jvm_hotspot_debugger_riscv64_RISCV64ThreadContext_NPRGREG
-#endif
+
 
   array = (*env)->NewLongArray(env, NPRGREG);
   CHECK_EXCEPTION_(0);
@@ -481,9 +479,6 @@ JNIEXPORT jlongArray JNICALL Java_sun_jvm_hotspot_debugger_linux_LinuxDebuggerLo
 #endif /* aarch64 */
 
 
-  (*env)->ReleaseLongArrayElements(env, array, regs, JNI_COMMIT);
-  return array;
-
 #if defined(riscv64)
 
 #define REG_INDEX(reg) sun_jvm_hotspot_debugger_riscv64_RISCV64ThreadContext_##reg
@@ -522,6 +517,8 @@ JNIEXPORT jlongArray JNICALL Java_sun_jvm_hotspot_debugger_linux_LinuxDebuggerLo
     regs[REG_INDEX(R30)] = gregs.t5;
     regs[REG_INDEX(R31)] = gregs.t6;
   }
+  (*env)->ReleaseLongArrayElements(env, array, regs, JNI_COMMIT);
+  return array;
   }
 #endif /* riscv64 */
 

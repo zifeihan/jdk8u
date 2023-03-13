@@ -55,13 +55,14 @@ public:
     // To act like previous version (pd_cache_state) don't NULL _last_Java_sp
     // unless the value is changing
     //
-    assert(src != NULL, "Src should not be NULL.");
+    /*assert(src != NULL, "Src should not be NULL.");
     if (_last_Java_sp != src->_last_Java_sp) {
       _last_Java_sp = NULL;
       OrderAccess::release();
-    }
+    }*/
     _last_Java_fp = src->_last_Java_fp;
     _last_Java_pc = src->_last_Java_pc;
+    OrderAccess::release();
     // Must be last so profiler will always see valid frame if has_last_frame() is true
     _last_Java_sp = src->_last_Java_sp;
   }

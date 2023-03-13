@@ -36,7 +36,10 @@
 
 #include <sys/ptrace.h>
 
-#if defined(aarch64) || defined(__riscv)
+#if defined(aarch64)
+#include "asm/ptrace.h"
+#endif
+#if defined(riscv64) 
 #include "asm/ptrace.h"
 #endif
 
@@ -76,7 +79,7 @@ combination of ptrace and /proc calls.
 #include <asm/ptrace.h>
 #define user_regs_struct  pt_regs
 #endif
-#if defined(aarch64)
+#if defined(aarch64) || defined(RISCV64)
 #define user_regs_struct user_pt_regs
 #endif
 

@@ -42,7 +42,8 @@
 #include "runtime/stubCodeGenerator.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
-#include "utilities/align.hpp"
+//#include "utilities/align.hpp"
+#include "utilities/top.hpp"
 #ifdef COMPILER2
 #include "opto/runtime.hpp"
 #endif
@@ -230,7 +231,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
           __ push_call_clobbered_registers();
           // must compute element count unless barrier set interface is changed (other platforms supply count)
           assert_different_registers(start, end, scratch);
-          __ lea(scratch, Address(end, BytesPerHeapOop));
+          __ la(scratch, Address(end, BytesPerHeapOop));
           __ sub(scratch, scratch, start);               // subtract start to get #bytes
           __ srli(scratch, scratch, LogBytesPerHeapOop);  // convert to element count
           __ mv(c_rarg0, start);
@@ -258,9 +259,9 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
             __ membar(__ StoreStore);
           }
           __ BIND(L_loop);
-          __ add(count, count, start);
-          __ sb(zr, Address(count, 0));
-          __ addi(count, count, -1);//replace subs
+        //  __ add(count, count, start);
+        //  __ sb(zr, Address(count, 0));
+        //  __ addi(count, count, -1);//replace subs
           __ bge(count, 0, L_loop);
         }
         break;
@@ -1098,12 +1099,12 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
     }
     copy_memory(aligned, s, d, count, t0, size);
 
-    if (is_oop) {
+   /* if (is_oop) {
       __ pop_reg(RegSet::of(d, count), sp);
       if (VerifyOops) {
         verify_oop_array(size, d, count, t2);
       }
-    }
+    }*/
 
    // bs->arraycopy_epilogue(_masm, decorators, is_oop, d, count, t0, RegSet());
        if (is_oop) {
@@ -1112,8 +1113,8 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
         verify_oop_array(size, d, count, x28);
       __ sub(count, count, 1); // make an inclusive end pointer
       //__ lea(count, Address(d, count, Address::lsl(exact_log2(size))));
-      __ slli(count, count, exact_log2(size));
-      __ add(d, d, count);
+      __ slli(t1, count, exact_log2(size));
+      __ add(count, d, t1);
       gen_write_ref_array_post_barrier(d, count, t0);
     }
  
@@ -1168,24 +1169,22 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
 
    // BarrierSetAssembler *bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
    // bs->arraycopy_prologue(_masm, decorators, is_oop, s, d, count, saved_regs);
+   if (is_oop) {
+      __ push_reg(RegSet::of(d, count), sp);
+     gen_write_ref_array_pre_barrier(d, count, dest_uninitialized);
+    }
 
-       if (is_oop) {
+    copy_memory(aligned, s, d, count, t0, -size);
+
+    if (is_oop) {
        __ pop_reg(RegSet::of(d, count), sp);
       if (VerifyOops)
         verify_oop_array(size, d, count, x28);
       __ sub(count, count, 1); // make an inclusive end pointer
       //__ lea(count, Address(d, count, Address::lsl(exact_log2(size))));
-      __ slli(count, count, exact_log2(size));
-      __ add(d, d, count);     
-      gen_write_ref_array_post_barrier(d, count, t1);
-    }
-
-    copy_memory(aligned, s, d, count, t0, -size);
-    if (is_oop) {
-      __ pop_reg(RegSet::of(d, count), sp);
-      if (VerifyOops) {
-        verify_oop_array(size, d, count, t2);
-      }
+      __ slli(t1, count, exact_log2(size));
+      __ add(count, d, t1);
+      gen_write_ref_array_post_barrier(d, count, t0);
     }
     //bs->arraycopy_epilogue(_masm, decorators, is_oop, d, count, t0, RegSet());
     __ leave();
@@ -1538,7 +1537,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
 
     __ BIND(L_store_element);
     //__ store_heap_oop_rv(Address(to, UseCompressedOops ? 4 : 8), copied_oop); // store the oop  // store the oop
-     __ store_heap_oop(Address(to, 0), copied_oop, noreg, noreg, AS_RAW); 
+    __ store_heap_oop(Address(to, 0), copied_oop, noreg, noreg, AS_RAW); 
     __ add(to, to, UseCompressedOops ? 4 : 8);
     __ sub(count, count, 1);
     __ beqz(count, L_do_card_marks);
@@ -1701,7 +1700,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
     StubCodeMark mark(this, "StubRoutines", name);
 
     // Registers used as temps
-    const Register dst_klass = c_rarg5;
+   // const Register dst_klass = c_rarg5;
 
     address start = __ pc();
 
@@ -1924,7 +1923,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
       // It is safe to examine both src.length and dst.length.
       arraycopy_range_checks(src, src_pos, dst, dst_pos, scratch_length,
                              t2, L_failed);
-
+      const Register dst_klass = t1;
       __ load_klass(dst_klass, dst); // reload
 
       // Marshal the base address arguments now, freeing registers.
@@ -2818,7 +2817,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
       StubRoutines::riscv64::_large_array_equals = generate_large_array_equals();
     }
 
-    generate_compare_long_strings();
+   // generate_compare_long_strings();
 
     // Safefetch stubs.
     generate_safefetch("SafeFetch32", sizeof(int),     &StubRoutines::_safefetch32_entry,
@@ -2828,7 +2827,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
                                                        &StubRoutines::_safefetchN_fault_pc,
                                                        &StubRoutines::_safefetchN_continuation_pc);
 
-    StubRoutines::riscv64::set_completed();
+   // StubRoutines::riscv64::set_completed();
   }
 
  public:

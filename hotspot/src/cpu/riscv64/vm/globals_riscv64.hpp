@@ -41,7 +41,7 @@ define_pd_global(bool, TrapBasedNullChecks,      false);
 define_pd_global(bool, UncommonNullCast,         true);  // Uncommon-trap NULLs past to check cast
 define_pd_global(intx, PreInflateSpin,           10);
 
-define_pd_global(uintx, CodeCacheSegmentSize,    64 TIERED_ONLY(+64)); // Tiered compilation has large code-entry alignment.
+//define_pd_global(uintx, CodeCacheSegmentSize,    64 TIERED_ONLY(+64)); // Tiered compilation has large code-entry alignment.
 define_pd_global(intx, CodeEntryAlignment,       64);
 define_pd_global(intx, OptoLoopAlignment,        16);
 define_pd_global(intx, InlineFrequencyCount,     100);
@@ -62,7 +62,7 @@ define_pd_global(intx, InlineFrequencyCount,     100);
 define_pd_global(intx, StackYellowPages, DEFAULT_STACK_YELLOW_PAGES);
 define_pd_global(intx, StackRedPages, DEFAULT_STACK_RED_PAGES);
 define_pd_global(intx, StackShadowPages, DEFAULT_STACK_SHADOW_PAGES);
-define_pd_global(intx, StackReservedPages, DEFAULT_STACK_RESERVED_PAGES);
+//define_pd_global(intx, StackReservedPages, DEFAULT_STACK_RESERVED_PAGES);
 
 define_pd_global(bool, RewriteBytecodes,     true);
 define_pd_global(bool, RewriteFrequentPairs, true);
@@ -76,12 +76,12 @@ define_pd_global(uintx, CMSYoungGenPerWorker, 64*M);  // default max size of CMS
 
 define_pd_global(uintx, TypeProfileLevel, 111);
 
-define_pd_global(bool, CompactStrings, true);
+//define_pd_global(bool, CompactStrings, true);
 
 // Clear short arrays bigger than one word in an arch-specific way
-define_pd_global(intx, InitArrayShortSize, BytesPerLong);
+//define_pd_global(intx, InitArrayShortSize, BytesPerLong);
 
-define_pd_global(bool, ThreadLocalHandshakes, true);
+//define_pd_global(bool, ThreadLocalHandshakes, true);
 
 define_pd_global(intx, InlineSmallCode,          1000);
 

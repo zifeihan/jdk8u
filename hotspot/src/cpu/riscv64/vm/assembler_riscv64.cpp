@@ -1002,7 +1002,7 @@ Address::Address(address target, relocInfo::relocType rtype) : _base(noreg), _of
   }
 }
 
-#define __ as->
+/*#define __ as->
 void Address::lea(MacroAssembler *as, Register r) const {
   Relocation* reloc = _rspec.reloc();
   relocInfo::relocType rtype = (relocInfo::relocType) reloc->type();
@@ -1017,10 +1017,10 @@ void Address::lea(MacroAssembler *as, Register r) const {
       __ sub(r, _base, -_offset);
       break;
   }
-  case base_plus_offset_reg: {
+  //case base_plus_offset_reg: {
     //__ add(r, _base, _index, _ext.op(), MAX(_ext.shift(), 0));
-    break;
-  }
+//    break;
+ // }
   case literal: {
     if (rtype == relocInfo::none)
       __ mv(r, target());
@@ -1031,4 +1031,4 @@ void Address::lea(MacroAssembler *as, Register r) const {
   default:
     ShouldNotReachHere();
   }
-}
+}*/

@@ -25,26 +25,26 @@
  */
 
 #include "precompiled.hpp"
-#include "asm/macroAssembler.inline.hpp"
+//#include "asm/macroAssembler.inline.hpp"
 #include "asm/macroAssembler.hpp"
 //#include "barrierSetAssembler_riscv64.hpp"
 //#include "interpreter/interp_masm.hpp"
 #include "interpreter/interpreter.hpp"
 #include "interpreter/interpreterRuntime.hpp"
 #include "interpreter/templateTable.hpp"
-#include "memory/universe.hpp"
+//#include "memory/universe.hpp"
 #include "memory/universe.inline.hpp"
 #include "oops/method.hpp"
 #include "oops/methodData.hpp"
 #include "oops/objArrayKlass.hpp"
 #include "oops/oop.inline.hpp"
 #include "prims/methodHandles.hpp"
-#include "runtime/frame.inline.hpp"
+//#include "runtime/frame.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/synchronizer.hpp"
-#include "memory/barrierSet.hpp"
-
+//#include "memory/barrierSet.hpp"
+#ifndef CC_INTERP
 #define __ _masm->
 
 // Platform-dependent initialization
@@ -164,7 +164,7 @@ static void do_oop_store_rv(MacroAssembler* _masm,
             __ mv(x13, obj.base());
           }
         } else {
-          __ lea(x13, obj);
+          __ la(x13, obj);
         }
         __ g1_write_barrier_pre(x13 /* obj */,
                                 x11 /* pre_val */,
@@ -203,7 +203,7 @@ static void do_oop_store_rv(MacroAssembler* _masm,
           if (!precise || (obj.index() == noreg && obj.offset() == 0)) {
             __ store_check(obj.base());
           } else {
-            __ lea(x13, obj);
+            __ la(x13, obj);
             __ store_check(x13);
           }
         }
@@ -399,7 +399,7 @@ void TemplateTable::sipush()
 void TemplateTable::ldc(bool wide)
 {
   transition(vtos, vtos);
-  Label call_ldc, notFloat, notClass, notInt, Done;
+  Label call_ldc, notFloat, notClass,  Done;
 
   if (wide) {
    __ get_unsigned_2_byte_index_at_bcp(x11, 1);
@@ -442,6 +442,7 @@ void TemplateTable::ldc(bool wide)
   __ mv(t1, JVM_CONSTANT_Float);
   __ bne(x13, t1, notFloat);
 
+
   // ftos
   __ slli(x11, x11, 3);
   __ add(x11, x12, x11);
@@ -450,19 +451,27 @@ void TemplateTable::ldc(bool wide)
   __ j(Done);
 
   __ bind(notFloat);
-
+#ifdef ASSERT
+  {
+    Label L;
   __ mv(t1, JVM_CONSTANT_Integer);
-  __ bne(x13, t1, notInt);
+  __ beq(x13, t1, L);
+  __ stop("unexpected tag type in ldc");
+  __ bind(L);
+  }
+#endif
+ // __ mv(t1, JVM_CONSTANT_Integer);
+  //__ bne(x13, t1, notInt);
 
   // itos
   __ slli(x11, x11, 3);
   __ add(x11, x12, x11);
   __ lw(x10, Address(x11, base_offset));
   __ push_i(x10);
-  __ j(Done);
+  //__ j(Done);
 
-  __ bind(notInt);
-  condy_helper(Done);
+  //__ bind(notInt);
+ // condy_helper(Done);
 
   __ bind(Done);
 }
@@ -472,11 +481,11 @@ void TemplateTable::fast_aldc(bool wide)
 {
   transition(vtos, atos);
 
-  const Register result = x10;
-  const Register tmp = x11;
-  const Register rarg = x12;
+   Register result = x10;
+   Register tmp = x11;
+  //const Register rarg = x12;
 
-  const int index_size = wide ? sizeof(u2) : sizeof(u1);
+   int index_size = wide ? sizeof(u2) : sizeof(u1);
 
   Label resolved;
 
@@ -487,11 +496,11 @@ void TemplateTable::fast_aldc(bool wide)
   __ load_resolved_reference_at_index(result, tmp);
   __ bnez(result, resolved);
 
-  const address entry = CAST_FROM_FN_PTR(address, InterpreterRuntime::resolve_ldc);
+   address entry = CAST_FROM_FN_PTR(address, InterpreterRuntime::resolve_ldc);
 
   // first time invocation - must resolve first
-  __ mv(rarg, (int)bytecode());
-  __ call_VM(result, entry, rarg);
+  __ mv(tmp, (int)bytecode());
+  __ call_VM(result, entry, tmp);
 
   __ bind(resolved);
 
@@ -518,7 +527,7 @@ void TemplateTable::fast_aldc(bool wide)
 void TemplateTable::ldc2_w()
 {
     transition(vtos, vtos);
-    Label notDouble, notLong, Done;
+    Label notDouble, Done;
     __ get_unsigned_2_byte_index_at_bcp(x10, 1);
 
     __ get_cpool_and_tags(x11, x12);
@@ -539,25 +548,25 @@ void TemplateTable::ldc2_w()
     __ j(Done);
 
     __ bind(notDouble);
-    __ mv(t1, (int)JVM_CONSTANT_Long);
-    __ bne(x12, t1, notLong);
+   // __ mv(t1, (int)JVM_CONSTANT_Long);
+    //__ bne(x12, t1, notLong);
 
     // ltos
     __ slli(x10, x10, 3);
     __ add(x10, x11, x10);
     __ ld(x10, Address(x10, base_offset));
     __ push_l(x10);
-    __ j(Done);
+    //__ j(Done);
 
-    __ bind(notLong);
-    condy_helper(Done);
+   // __ bind(notLong);
+    //condy_helper(Done);
     __ bind(Done);
 
 }
 
 void TemplateTable::condy_helper(Label& Done)
 {
-  const Register obj = x10;
+ /* const Register obj = x10;
   const Register rarg = x11;
   const Register flags = x12;
   const Register off = x13;
@@ -664,7 +673,7 @@ void TemplateTable::condy_helper(Label& Done)
       ShouldNotReachHere();
     }
 
-    __ stop("bad ldc/condy");
+    __ stop("bad ldc/condy");*/
 }
 
 void TemplateTable::locals_index(Register reg, int offset)
@@ -678,7 +687,7 @@ void TemplateTable::iload() {
   transition(vtos, itos);
   if (RewriteFrequentPairs ) {
     Label rewrite, done;
-    const Register bc = x14;
+     Register bc = x14;
 
     // get next bytecode
     __ load_unsigned_byte(x11, at_bcp(Bytecodes::length_for(Bytecodes::_iload)));
@@ -862,7 +871,7 @@ void TemplateTable::index_check(Register array, Register index)
   __ null_check(array, arrayOopDesc::length_offset_in_bytes());
   // sign extend index for use by indexed load
   // check index
-  const Register length = t0;
+   Register length = t0;
   __ lwu(length, Address(array, arrayOopDesc::length_offset_in_bytes()));
   if (index != x11) {
     assert(x11 != array, "different registers");
@@ -871,7 +880,7 @@ void TemplateTable::index_check(Register array, Register index)
   Label ok;
   __ addw(index, index, zr);
   __ bltu(index, length, ok);
-  __ mv(x13, array);
+  //__ mv(x13, array);
   __ mv(t0, Interpreter::_throw_ArrayIndexOutOfBoundsException_entry);
   __ jr(t0);
   __ bind(ok);
@@ -1354,8 +1363,8 @@ void TemplateTable::aastore() {
   // Get the value we will store
   __ ld(x10, at_tos());
   // Now store using the appropriate barrier
-  do_oop_store(_masm, element_address, x10, IS_ARRAY);
-  //do_oop_store_rv(_masm, element_address, x10, _bs->kind(), true);
+  //do_oop_store(_masm, element_address, x10, IS_ARRAY);
+  do_oop_store_rv(_masm, element_address, x10, _bs->kind(), true);
   __ j(done);
 
   // Have a NULL in x10, x13=array, x12=index.  Store NULL at ary[idx]
@@ -1363,8 +1372,8 @@ void TemplateTable::aastore() {
   __ profile_null_seen(x12);
 
   // Store a NULL
-  do_oop_store(_masm, element_address, noreg, IS_ARRAY);
-  //do_oop_store_rv(_masm, element_address, noreg, _bs->kind(), true);
+  //do_oop_store(_masm, element_address, noreg, IS_ARRAY);
+  do_oop_store_rv(_masm, element_address, noreg, _bs->kind(), true);
 
   // Pop stack arguments
   __ bind(done);
@@ -1964,7 +1973,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
     __ push_i(x11);
     // Adjust the bcp by the 16-bit displacement in x12
     __ add(xbcp, xbcp, x12);
-    //__ load_unsigned_byte(t0, Address(xbcp, 0));
+    __ load_unsigned_byte(t0, Address(xbcp, 0));
     // load the next target bytecode into t0, it is the argument of dispatch_only
     __ dispatch_only(vtos, /*generate_poll*/true);
     return;
@@ -2023,7 +2032,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
       __ bind(no_mdo);
       // Increment backedge counter in MethodCounters*
       __ ld(t0, Address(xmethod, Method::method_counters_offset()));
-      const Address mask(t0, in_bytes(MethodData::backedge_mask_offset()));
+      const Address mask(t0, in_bytes(MethodCounters::backedge_mask_offset()));
       __ increment_mask_and_jump(Address(t0, be_offset), increment, mask,
                                  x10, t1, false,
                                  UseOnStackReplacement ? &backedge_counter_overflow : &dispatch);
@@ -2637,7 +2646,8 @@ void TemplateTable::load_field_cp_cache_entry(Register obj,
     const int mirror_offset = in_bytes(Klass::java_mirror_offset());
     __ ld(obj, Address(obj, mirror_offset));
     //__ resolve_oop_handle(obj);
-  }
+}
+  
 }
 
 void TemplateTable::load_invoke_cp_cache_entry(int byte_no,
@@ -2798,8 +2808,8 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static)
   __ sub(t0, flags, atos);
   __ bnez(t0, notObj);
   // atos
-  do_oop_load(_masm, field, x10, IN_HEAP);
-  //__ load_heap_oop_rv(x10, field);
+  //do_oop_load(_masm, field, x10, IN_HEAP);
+  __ load_heap_oop_rv(x10, field);
   __ push(atos);
   if (!is_static) {
     patch_bytecode(Bytecodes::_fast_agetfield, bc, x11);
@@ -3087,8 +3097,8 @@ void TemplateTable::putfield_or_static(int byte_no, bool is_static) {
     __ add(off, obj, off); // if static, obj from cache, else obj from stack.
     const Address field(off, 0);
     // Store into the field
-    //do_oop_store_rv(_masm, field, x10, _bs->kind(), false);
-    do_oop_store(_masm, field, x10, IN_HEAP);
+    do_oop_store_rv(_masm, field, x10, _bs->kind(), false);
+    //do_oop_store(_masm, field, x10, IN_HEAP);
     /*if (rc == may_rewrite) {
       patch_bytecode(Bytecodes::_fast_aputfield, bc, x11, true, byte_no);
     }*/
@@ -3372,8 +3382,8 @@ void TemplateTable::fast_storefield(TosState state)
   // access field
   switch (bytecode()) {
   case Bytecodes::_fast_aputfield:
-    //do_oop_store_rv(_masm, field, x10, _bs->kind(), false);
-    do_oop_store(_masm, field, x10, IN_HEAP);
+    do_oop_store_rv(_masm, field, x10, _bs->kind(), false);
+    //do_oop_store(_masm, field, x10, IN_HEAP);
     break;
   case Bytecodes::_fast_lputfield:
     //__ sd(x10, field);
@@ -3474,8 +3484,8 @@ void TemplateTable::fast_accessfield(TosState state)
   // access field
   switch (bytecode()) {
   case Bytecodes::_fast_agetfield:
-    do_oop_load(_masm, field, x10, IN_HEAP);
-    //__ load_heap_oop_rv(x10, field);
+    //do_oop_load(_masm, field, x10, IN_HEAP);
+    __ load_heap_oop_rv(x10, field);
     __ verify_oop(x10);
     break;
   case Bytecodes::_fast_lgetfield:
@@ -3688,7 +3698,6 @@ void TemplateTable::invokevirtual_helper(Register index,
   __ jump_from_interpreted(method);
 
   __ bind(notFinal);
-
   // get receiver klass
   __ null_check(recv, oopDesc::klass_offset_in_bytes());
   __ load_klass(x10, recv);
@@ -3808,6 +3817,7 @@ void TemplateTable::invokeinterface(int byte_no) {
   __ mv(x28, xmethod);
   // Receiver subtype check against REFC.
   // Superklass in x10. Subklass in x13. Blows t1, x30*/
+  //__ mv(x28, xmethod);
   __ lookup_interface_method(// inputs: rec. class, interface, itable index
                              x13, x10, noreg,
                              // outputs: scan temp. reg, scan temp. reg
@@ -3827,9 +3837,9 @@ void TemplateTable::invokeinterface(int byte_no) {
   __ negw(xmethod, xmethod);
 
   // Preserve recvKlass for throw_AbstractMethodErrorVerbose
-  __ mv(xlocals, x13);
+  //__ mv(xlocals, x13);
   __ lookup_interface_method(// inputs: rec. class, interface, itable index
-                             xlocals, x10, xmethod,
+                             x13, x10, xmethod,
                              // outputs: method, scan temp. reg
                              xmethod, x30,
                              no_such_interface);
@@ -3878,7 +3888,11 @@ void TemplateTable::invokeinterface(int byte_no) {
 void TemplateTable::invokehandle(int byte_no) {
   transition(vtos, vtos);
   assert(byte_no == f1_byte, "use this argument");
-
+  if (!EnableInvokeDynamic) {
+    // rewriter does not generate this bytecode
+    __ should_not_reach_here();
+    return;
+  }
   prepare_invoke(byte_no, xmethod, x10, x12);
   __ verify_method_ptr(x12);
   __ verify_oop(x12);
@@ -4427,3 +4441,4 @@ void TemplateTable::multianewarray() {
   __ slli(t0, x11, 3);
   __ add(esp, esp, t0);
 }
+#endif // !CC_INTERP

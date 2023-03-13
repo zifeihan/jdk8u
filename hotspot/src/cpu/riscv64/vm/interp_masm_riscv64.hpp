@@ -36,6 +36,8 @@
 typedef ByteSize (*OffsetFunction)(uint);
 
 class InterpreterMacroAssembler: public MacroAssembler {
+#ifndef CC_INTERP
+ protected:
  protected:
   // Interpreter specific version of call_VM_base
   using MacroAssembler::call_VM_leaf_base;
@@ -49,10 +51,13 @@ class InterpreterMacroAssembler: public MacroAssembler {
                             address  entry_point,
                             int number_of_arguments,
                             bool check_exceptions);
+  //virtual void check_and_handle_popframe(Register java_thread);
+ // virtual void check_and_handle_earlyret(Register java_thread);
 
   // base routine for all dispatches
   void dispatch_base(TosState state, address* table, bool verifyoop = true,
-                     bool generate_poll = false, Register Rs = t0);
+   bool generate_poll = false, Register Rs = t0);
+#endif // CC_INTERP
 
  public:
   InterpreterMacroAssembler(CodeBuffer* code) : MacroAssembler(code) {}
@@ -60,6 +65,10 @@ class InterpreterMacroAssembler: public MacroAssembler {
 
   void load_earlyret_value(TosState state);
 
+#ifdef CC_INTERP
+  void save_bcp()                                          { /*  not needed in c++ interpreter and harmless */ }
+  void restore_bcp()                                       { /*  not needed in c++ interpreter and harmless */ }
+#else
   void jump_to_entry(address entry);
 
   virtual void check_and_handle_popframe(Register java_thread);
@@ -203,6 +212,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
                          bool throw_monitor_exception = true,
                          bool install_monitor_exception = true,
                          bool notify_jvmdi = true);
+#endif // CC_INTERP
 
   // FIXME: Give us a valid frame at a null check.
   virtual void null_check(Register reg, int offset = -1) {
@@ -212,6 +222,7 @@ class InterpreterMacroAssembler: public MacroAssembler {
   // Object locking
   void lock_object  (Register lock_reg);
   void unlock_object(Register lock_reg);
+#ifndef CC_INTERP
 
   // Interpreter profiling operations
   void set_method_data_pointer_for_bcp();
@@ -275,6 +286,8 @@ class InterpreterMacroAssembler: public MacroAssembler {
   // Debugging
   // only if +VerifyFPU  && (state == ftos || state == dtos)
   void verify_FPU(int stack_depth, TosState state = ftos);
+
+#endif // !CC_INTERP
 
   typedef enum { NotifyJVMTI, SkipNotifyJVMTI } NotifyMethodExitMode;
 

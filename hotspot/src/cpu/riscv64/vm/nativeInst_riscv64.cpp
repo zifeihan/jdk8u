@@ -157,7 +157,7 @@ address NativeCall::get_trampoline() {
   assert(code != NULL, "Could not find the containing code blob");
 
   address jal_destination = MacroAssembler::pd_call_destination(call_addr);
-  if (code != NULL && code->contains(jal_destination) && is_NativeCallTrampolineStub_at(jal_destination)) {
+  if (code != NULL && code->code_contains(jal_destination) && is_NativeCallTrampolineStub_at(jal_destination)) {
     return jal_destination;
   }
 
@@ -201,7 +201,7 @@ void NativeMovConstReg::set_data(intptr_t x) {
 
   // Find and replace the oop/metadata corresponding to this
   // instruction in oops section.
-  CodeBlob* cb = CodeCache::find_blob(instruction_address());
+ /* CodeBlob* cb = CodeCache::find_blob(instruction_address());
   if(cb != NULL) {
     nmethod* nm = cb->as_nmethod_or_null();
     if (nm != NULL) {
@@ -220,7 +220,7 @@ void NativeMovConstReg::set_data(intptr_t x) {
     }
   } else {
     ShouldNotReachHere();
-  }
+  }*/
 }
 
 void NativeMovConstReg::print() {
@@ -229,7 +229,7 @@ void NativeMovConstReg::print() {
 }
 
 //-------------------------------------------------------------------
-
+//address NativeMovRegMem::instruction_address() const      { return addr_at(instruction_offset); }
 int NativeMovRegMem::offset() const  {
   Unimplemented();
   return 0;
@@ -387,3 +387,4 @@ void NativeMembar::set_kind(uint32_t order_kind) {
   address membar = addr_at(0);
   *(unsigned int*) membar = insn;
 }
+bool NativeInstruction::is_dtrace_trap() { return false; }

@@ -1,5 +1,7 @@
 /*
- * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, Red Hat Inc.
+ * Copyright (c) 2007, 2010, Oracle and/or its affiliates.
+ * All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,49 +25,33 @@
  */
 
 #include "precompiled.hpp"
-#include "jfr/utilities/jfrTime.hpp"
-#include "runtime/os.hpp"
-#if defined(X86) && !defined(ZERO) 
-#include "rdtsc_x86.hpp"
+#include "asm/assembler.hpp"
+#include "interpreter/bytecodeInterpreter.hpp"
+#include "interpreter/bytecodeInterpreter.inline.hpp"
+#include "interpreter/interpreter.hpp"
+#include "interpreter/interpreterRuntime.hpp"
+#include "oops/methodData.hpp"
+#include "oops/method.hpp"
+#include "oops/oop.inline.hpp"
+#include "prims/jvmtiExport.hpp"
+#include "prims/jvmtiThreadState.hpp"
+#include "runtime/deoptimization.hpp"
+#include "runtime/frame.inline.hpp"
+#include "runtime/sharedRuntime.hpp"
+#include "runtime/stubRoutines.hpp"
+#include "runtime/synchronizer.hpp"
+#include "runtime/vframeArray.hpp"
+#include "utilities/debug.hpp"
+#ifdef TARGET_ARCH_MODEL_x86_32
+# include "interp_masm_x86_32.hpp"
+#endif
+#ifdef TARGET_ARCH_MODEL_x86_64
+# include "interp_masm_x86_64.hpp"
+#endif
+#ifdef TARGET_ARCH_MODEL_riscv64
+# include "interp_masm_riscv64.hpp"
 #endif
 
-bool JfrTime::_ft_enabled = false;
+#ifdef CC_INTERP
 
-bool JfrTime::initialize() {
-  static bool initialized = false;
-  if (!initialized) {
-#if defined(X86) && !defined(ZERO)
-    _ft_enabled = Rdtsc::initialize();
-#else
-    _ft_enabled = false;
-#endif
-    initialized = true;
-  }
-  return initialized;
-}
-
-bool JfrTime::is_ft_supported() {
-#if defined(X86) && !defined(ZERO) 
-  return Rdtsc::is_supported();
-#else
-  return false;
-#endif
-}
-
-
-const void* JfrTime::time_function() {
-#if defined(X86) && !defined(ZERO)
-  return _ft_enabled ? (const void*)Rdtsc::elapsed_counter : (const void*)os::elapsed_counter;
-#else
-  return (const void*)os::elapsed_counter;
-#endif
-}
-
-jlong JfrTime::frequency() {
-#if defined(X86) && !defined(ZERO)
-  return _ft_enabled ? Rdtsc::frequency() : os::elapsed_frequency();
-#else
-  return os::elapsed_frequency();
-#endif
-}
-
+#endif // CC_INTERP (all)

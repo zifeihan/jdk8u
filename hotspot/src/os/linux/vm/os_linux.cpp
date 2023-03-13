@@ -1418,7 +1418,7 @@ void os::Linux::clock_init() {
 
 #ifndef SYS_clock_getres
 
-#if defined(IA32) || defined(AMD64) || defined(AARCH64) || defined(RISCV64)
+#if defined(IA32) || defined(AMD64) || defined(AARCH64)
 #define SYS_clock_getres IA32_ONLY(266)  AMD64_ONLY(229) AARCH64_ONLY(114)
 #define sys_clock_getres(x,y)  ::syscall(SYS_clock_getres, x, y)
 #else
@@ -1980,9 +1980,8 @@ void * os::dll_load(const char *filename, char *ebuf, int ebuflen)
     {EM_PARISC,      EM_PARISC,  ELFCLASS32, ELFDATA2MSB, (char*)"PARISC"},
     {EM_68K,         EM_68K,     ELFCLASS32, ELFDATA2MSB, (char*)"M68k"},
     {EM_AARCH64,     EM_AARCH64, ELFCLASS64, ELFDATA2LSB, (char*)"AARCH64"},
-    {EM_RISCV,       EM_RISCV,   ELFCLASSNONE, ELFDATA2MSB, (char*)"RISC-V"},
+    {EM_RISCV,       EM_RISCV,   ELFCLASSNONE, ELFDATA2MSB, (char*)"RISCV"},
   };
-
   #if  (defined IA32)
     static  Elf32_Half running_arch_code=EM_386;
   #elif   (defined AMD64)
@@ -2966,7 +2965,7 @@ int os::Linux::sched_getcpu_syscall(void) {
   typedef long (*vgetcpu_t)(unsigned int *cpu, unsigned int *node, unsigned long *tcache);
   vgetcpu_t vgetcpu = (vgetcpu_t)VSYSCALL_ADDR(__NR_vgetcpu);
   retval = vgetcpu(&cpu, NULL, NULL);
-#elif defined(IA32) || defined(AARCH64) || defined(RISCV64)
+#elif defined(IA32) || defined(AARCH64)
 # ifndef SYS_getcpu
 #  define SYS_getcpu AARCH64_ONLY(168) IA32_ONLY(318)
 # endif

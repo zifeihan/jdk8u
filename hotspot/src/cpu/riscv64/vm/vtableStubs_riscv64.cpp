@@ -69,7 +69,8 @@ VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
   MacroAssembler* masm = new MacroAssembler(&cb);
   assert_cond(masm != NULL);
 
-#if (!defined(PRODUCT) && defined(COMPILER2))
+//#if (!defined(PRODUCT) && defined(COMPILER2))
+#ifndef PRODUCT
   if (CountCompiledCalls) {
     __ la(t2, ExternalAddress((address) SharedRuntime::nof_megamorphic_calls_addr()));
     __ add_memory_int32(Address(t2), 1);
@@ -89,7 +90,7 @@ VtableStub* VtableStubs::create_vtable_stub(int vtable_index) {
     start_pc = __ pc();
 
     // check offset vs vtable length
-    __ lwu(t0, Address(t2, InstanceKlass::vtable_length_offset()));
+    __ lwu(t0, Address(t2, InstanceKlass::vtable_length_offset()* wordSize));
     __ mvw(t1, vtable_index * vtableEntry::size());
     __ bgt(t0, t1, L);
     __ enter();
@@ -169,7 +170,8 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
   MacroAssembler* masm = new MacroAssembler(&cb);
   assert_cond(masm != NULL);
 
-#if (!defined(PRODUCT) && defined(COMPILER2))
+//#if (!defined(PRODUCT) && defined(COMPILER2))
+#ifndef PRODUCT
   if (CountCompiledCalls) {
     __ la(x18, ExternalAddress((address) SharedRuntime::nof_megamorphic_calls_addr()));
     __ add_memory_int32(Address(x18), 1);
@@ -271,6 +273,7 @@ VtableStub* VtableStubs::create_itable_stub(int itable_index) {
 
   return s;
 }
+
 
 int VtableStub::pd_code_alignment() {
   // riscv64 cache line size is 64 bytes, but we want to limit alignment loss.
