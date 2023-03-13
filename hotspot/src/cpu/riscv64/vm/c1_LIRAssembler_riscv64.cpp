@@ -403,7 +403,7 @@ void LIR_Assembler::poll_for_safepoint(relocInfo::relocType rtype, CodeEmitInfo*
   __ jr(t0);
   address polling_page(os::get_polling_page());
   assert(os::is_poll_address(polling_page), "should be");
-  int32 off=0;
+  int32_t off=0;
   __ la_patchable(t0, Address(polling_page, rtype), off);
   __ bind(poll);
   if (info)
