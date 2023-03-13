@@ -48,6 +48,12 @@ class SignatureHandlerGenerator: public NativeSignatureIterator {
 
  public:
   // Creation
+SignatureHandlerGenerator(methodHandle method, CodeBuffer* buffer) : NativeSignatureIterator(method) {
+  _masm = new MacroAssembler(buffer); // allocate on resourse area by default
+  _num_int_args = (method->is_static() ? 1 : 0);
+  _num_fp_args = 0;
+  _stack_offset = 0;
+}
   SignatureHandlerGenerator(methodHandle method, CodeBuffer* buffer);
   virtual ~SignatureHandlerGenerator() {
     _masm = NULL;
