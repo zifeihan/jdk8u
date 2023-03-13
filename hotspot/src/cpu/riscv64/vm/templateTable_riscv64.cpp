@@ -271,15 +271,15 @@ void TemplateTable::patch_bytecode(Bytecodes::Code bc, Register bc_reg,
       assert(byte_no == f1_byte || byte_no == f2_byte, "byte_no out of range");
       assert(load_bc_into_bc_reg, "we use bc_reg as temp");
       __ get_cache_and_index_and_bytecode_at_bcp(temp_reg, bc_reg, temp_reg, byte_no, 1);
-      __ mv(bc_reg, bc);
-      __ beqz(temp_reg, L_patch_done);
+      __ mvw(bc_reg, bc);
+      __ beq(bc_reg, temp_reg, L_patch_done);
     }
     break;
   default:
     assert(byte_no == -1, "sanity");
     // the pair bytecodes have already done the load.
     if (load_bc_into_bc_reg) {
-      __ mv(bc_reg, bc);
+      __ mvw(bc_reg, bc);
     }
   }
 
@@ -399,7 +399,7 @@ void TemplateTable::sipush()
 void TemplateTable::ldc(bool wide)
 {
   transition(vtos, vtos);
-  Label call_ldc, notFloat, notClass,  Done;
+  Label call_ldc, notFloat, notClass, Done;
 
   if (wide) {
    __ get_unsigned_2_byte_index_at_bcp(x11, 1);
@@ -460,7 +460,7 @@ void TemplateTable::ldc(bool wide)
   __ bind(L);
   }
 #endif
- // __ mv(t1, JVM_CONSTANT_Integer);
+  //__ mv(t1, JVM_CONSTANT_Integer);
   //__ bne(x13, t1, notInt);
 
   // itos
@@ -547,18 +547,18 @@ void TemplateTable::ldc2_w()
     __ push_d(f10);
     __ j(Done);
 
-    __ bind(notDouble);
-   // __ mv(t1, (int)JVM_CONSTANT_Long);
-    //__ bne(x12, t1, notLong);
-
+   /* __ bind(notDouble);
+    __ mv(t1, (int)JVM_CONSTANT_Long);
+    __ bne(x12, t1, notLong);*/
+   __ bind(notDouble);
     // ltos
     __ slli(x10, x10, 3);
     __ add(x10, x11, x10);
     __ ld(x10, Address(x10, base_offset));
     __ push_l(x10);
-    //__ j(Done);
+  //  __ j(Done);
 
-   // __ bind(notLong);
+    //__ bind(notLong);
     //condy_helper(Done);
     __ bind(Done);
 
@@ -566,7 +566,7 @@ void TemplateTable::ldc2_w()
 
 void TemplateTable::condy_helper(Label& Done)
 {
- /* const Register obj = x10;
+/*  const Register obj = x10;
   const Register rarg = x11;
   const Register flags = x12;
   const Register off = x13;
@@ -673,7 +673,7 @@ void TemplateTable::condy_helper(Label& Done)
       ShouldNotReachHere();
     }
 
-    __ stop("bad ldc/condy");*/
+    __ stop("bad ldc/condy");*/ 
 }
 
 void TemplateTable::locals_index(Register reg, int offset)
@@ -880,7 +880,7 @@ void TemplateTable::index_check(Register array, Register index)
   Label ok;
   __ addw(index, index, zr);
   __ bltu(index, length, ok);
-  //__ mv(x13, array);
+//  __ mv(x13, array);
   __ mv(t0, Interpreter::_throw_ArrayIndexOutOfBoundsException_entry);
   __ jr(t0);
   __ bind(ok);
