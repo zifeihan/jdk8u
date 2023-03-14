@@ -1261,19 +1261,24 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         f.load_argument(0, card_offset);
         __ srli(card_offset, card_offset, CardTableModRefBS::card_shift);
         __ load_byte_map_base(byte_map_base);
-        __ lbu(t0, Address(byte_map_base, card_offset));
+        //__ lbu(t0, Address(byte_map_base, card_offset));
+        //the Address of aarch is different from riscv
+        __ add(t2, byte_map_base, card_offset);
+        __ lbu(t0, Address(t2, 0));
         __ mv(t1, (int)G1SATBCardTableModRefBS::g1_young_card_val());
         __ bne(t0, t1, done);
 
         assert((int)CardTableModRefBS::dirty_card_val() == 0, "must be 0");
 
-        __ membar(Assembler::StoreLoad);
-        __ lbu(t0, Address(byte_map_base, card_offset));
+        __ membar(MacroAssembler::StoreLoad);
+        //__ lbu(t0, Address(byte_map_base, card_offset));
+        __ lbu(t0, Address(t2, 0));
         __ beqz(t0, done);
 
         // storing region crossing non-NULL, card is clean.
         // dirty card and log.
-        __ sb(zr, Address(byte_map_base, card_offset));
+        //__ sb(zr, Address(byte_map_base, card_offset));
+        __ sb(zr, Address(t2, 0));
 
         // Convert card offset into an address in card_addr
         Register card_addr = card_offset;
@@ -1288,7 +1293,10 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         const Register buffer_addr = lr;
 
         __ ld(buffer_addr, buffer);
-        __ sd(card_addr, Address(buffer_addr, t0));
+        //__ sd(card_addr, Address(buffer_addr, t0));
+        //the Address of aarch is different from riscv,so add temp x28.
+        __ add(x28, buffer_addr, t0);
+        __ sd(card_addr, Address(x28, 0));
         __ j(done);
 
         __ bind(runtime);
