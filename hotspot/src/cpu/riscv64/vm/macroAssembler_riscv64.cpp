@@ -47,7 +47,7 @@
 //#include "safepointMechanism_riscv64.hpp"
 #ifdef COMPILER2
 #include "opto/compile.hpp"
-//#include "opto/intrinsicnode.hpp"
+#include "opto/memnode.hpp"
 #include "opto/subnode.hpp"
 #include "opto/node.hpp"
 #endif
