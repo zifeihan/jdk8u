@@ -2794,7 +2794,7 @@ operand immF0()
 
 operand immIOffset()
 %{
-  predicate(Assembler::is_imm_in_range(n->get_int(), 12, 0));
+  predicate(is_imm_in_range(n->get_int(), 12, 0));
   match(ConI);
   op_cost(0);
   format %{ %}
@@ -2803,7 +2803,7 @@ operand immIOffset()
 
 operand immLOffset()
 %{
-  predicate(Assembler::is_imm_in_range(n->get_long(), 12, 0));
+  predicate(is_imm_in_range(n->get_long(), 12, 0));
   match(ConL);
   op_cost(0);
   format %{ %}
