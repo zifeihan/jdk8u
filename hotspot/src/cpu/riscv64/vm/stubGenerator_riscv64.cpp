@@ -1182,8 +1182,8 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
         verify_oop_array(size, d, count, x28);
       __ sub(count, count, 1); // make an inclusive end pointer
       //__ lea(count, Address(d, count, Address::lsl(exact_log2(size))));
-      __ slli(t1, count, exact_log2(size));
-      __ add(count, d, t1);
+      __ slli(t2, count, exact_log2(size));
+      __ add(count, d, t2);
       gen_write_ref_array_post_barrier(d, count, t0);
     }
     //bs->arraycopy_epilogue(_masm, decorators, is_oop, d, count, t0, RegSet());

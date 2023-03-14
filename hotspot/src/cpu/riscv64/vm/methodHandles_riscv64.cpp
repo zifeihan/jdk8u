@@ -340,7 +340,7 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
       if (VerifyMethodHandles) {
         verify_ref_kind(_masm, JVM_REF_invokeSpecial, member_reg, temp3);
       }
-      __ load_heap_oop(xmethod, member_vmtarget);
+      //__ load_heap_oop(xmethod, member_vmtarget);
       //__ access_load_at(T_ADDRESS, IN_HEAP, xmethod, vmtarget_method, noreg, noreg);
      // __ ld(xmethod, member_vmtarget);
         __ ld(xmethod, member_vmtarget);
@@ -350,7 +350,7 @@ void MethodHandles::generate_method_handle_dispatch(MacroAssembler* _masm,
       if (VerifyMethodHandles) {
         verify_ref_kind(_masm, JVM_REF_invokeStatic, member_reg, temp3);
       }
-      __ load_heap_oop(xmethod, member_vmtarget);
+      //__ load_heap_oop(xmethod, member_vmtarget);
       //__ access_load_at(T_ADDRESS, IN_HEAP, xmethod, vmtarget_method, noreg, noreg);
      // __ ld(xmethod, member_vmtarget);
         __ ld(xmethod, member_vmtarget);
