@@ -1419,7 +1419,7 @@ void os::Linux::clock_init() {
 #ifndef SYS_clock_getres
 
 #if defined(IA32) || defined(AMD64) || defined(AARCH64)
-#define SYS_clock_getres IA32_ONLY(266)  AMD64_ONLY(229) AARCH64_ONLY(114)
+#define SYS_clock_getres IA32_ONLY(266)  AMD64_ONLY(229) AARCH64_ONLY(114) RISCV64_ONLY(114)
 #define sys_clock_getres(x,y)  ::syscall(SYS_clock_getres, x, y)
 #else
 #warning "SYS_clock_getres not defined for this platform, disabling fast_thread_cpu_time"
@@ -2965,9 +2965,9 @@ int os::Linux::sched_getcpu_syscall(void) {
   typedef long (*vgetcpu_t)(unsigned int *cpu, unsigned int *node, unsigned long *tcache);
   vgetcpu_t vgetcpu = (vgetcpu_t)VSYSCALL_ADDR(__NR_vgetcpu);
   retval = vgetcpu(&cpu, NULL, NULL);
-#elif defined(IA32) || defined(AARCH64)
+#elif defined(IA32) || defined(AARCH64) || defined(RISCV64)
 # ifndef SYS_getcpu
-#  define SYS_getcpu AARCH64_ONLY(168) IA32_ONLY(318)
+#  define SYS_getcpu AARCH64_ONLY(168) IA32_ONLY(318) RISCV64_ONLY(168)
 # endif
   retval = syscall(SYS_getcpu, &cpu, NULL, NULL);
 #endif
