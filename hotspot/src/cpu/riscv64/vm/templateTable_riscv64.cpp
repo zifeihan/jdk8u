@@ -271,15 +271,15 @@ void TemplateTable::patch_bytecode(Bytecodes::Code bc, Register bc_reg,
       assert(byte_no == f1_byte || byte_no == f2_byte, "byte_no out of range");
       assert(load_bc_into_bc_reg, "we use bc_reg as temp");
       __ get_cache_and_index_and_bytecode_at_bcp(temp_reg, bc_reg, temp_reg, byte_no, 1);
-      __ mvw(bc_reg, bc);
-      __ beq(bc_reg, temp_reg, L_patch_done);
+      __ mv(bc_reg, bc);
+      __ beqz(temp_reg, L_patch_done);
     }
     break;
   default:
     assert(byte_no == -1, "sanity");
     // the pair bytecodes have already done the load.
     if (load_bc_into_bc_reg) {
-      __ mvw(bc_reg, bc);
+      __ mv(bc_reg, bc);
     }
   }
 
@@ -2127,11 +2127,12 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
       // x12: temporary
       __ beqz(x10, dispatch);     // test result -- no osr if null
       // nmethod may have been invalidated (VM may block upon call_VM return)
-      __ lbu(x12, Address(x10, nmethod::entry_bci_offset()));
+      __ lwu(x12, Address(x10, nmethod::entry_bci_offset()));
       //if (nmethod::in_use != 0) {
        // __ sub(x12, x12, nmethod::in_use);
       //}
-      __ bnez(x12, dispatch);
+      __ addi(t0, x12, -InvalidOSREntryBci);
+      __ bnez(t0, dispatch);
 
       // We have the address of an on stack replacement routine in x10
       // We need to prepare to execute the OSR method. First we must
