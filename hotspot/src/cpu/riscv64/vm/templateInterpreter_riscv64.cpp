@@ -834,8 +834,8 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
       // Test to see if we should create a method data oop
       int32_t offset=0 ;
      // __ ld(t1, Address(xmethod, Method::method_counters_offset()));
-      //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
-      __ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
+      __ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
+     // __ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
       __ lwu(t1, Address(t1, offset));
       __ blt(x10, t1, *profile_method_continue);
 
@@ -844,12 +844,12 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
     }
 
     {
-      //__ ld(t1, Address(xmethod, Method::method_counters_offset()));
-      //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_invocation_limit_offset())));
+      __ ld(t1, Address(xmethod, Method::method_counters_offset()));
+      __ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_invocation_limit_offset())));
      // __ la(t1, ExternalAddress((address) &InvocationCounter::InterpreterInvocationLimit)); 
      int32_t offset=0 ;
-      __ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
-      __ lwu(t1, Address(t1, offset));
+      //__ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
+      //__ lwu(t1, Address(t1, offset));
       __ bltu(x10, t1, done);
       __ j(*overflow); // offset is too large so we have to use j instead of bgeu here
     }
@@ -1105,8 +1105,8 @@ void TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {
   {
     __ load_mirror(t0, xmethod);
     __ sd(t0, Address(sp, 4 * wordSize));
-  }*/
-  __ sd(zr, Address(sp, 5 * wordSize));
+  }
+  __ sd(zr, Address(sp, 5 * wordSize));*/
 
   __ load_constant_pool_cache(xcpool, xmethod);
   __ sd(xcpool, Address(sp, 3 * wordSize));
@@ -1543,7 +1543,7 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     }
   }
 
-  // check for safepoint operation in progress and/or pending suspend requests
+  // 
   {
     Label L, Continue;
     //__ safepoint_poll_acquire(L);
