@@ -834,8 +834,8 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
       // Test to see if we should create a method data oop
       int32_t offset=0 ;
      // __ ld(t1, Address(xmethod, Method::method_counters_offset()));
-      __ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
-     // __ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
+      //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
+      __ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
       __ lwu(t1, Address(t1, offset));
       __ blt(x10, t1, *profile_method_continue);
 
@@ -844,12 +844,12 @@ void InterpreterGenerator::generate_counter_incr(Label* overflow,
     }
 
     {
-      __ ld(t1, Address(xmethod, Method::method_counters_offset()));
-      __ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_invocation_limit_offset())));
+      //__ ld(t1, Address(xmethod, Method::method_counters_offset()));
+      //__ lwu(t1, Address(t1, in_bytes(MethodCounters::interpreter_invocation_limit_offset())));
      // __ la(t1, ExternalAddress((address) &InvocationCounter::InterpreterInvocationLimit)); 
      int32_t offset=0 ;
-      //__ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
-      //__ lwu(t1, Address(t1, offset));
+      __ la_patchable(t1, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit),offset); 
+      __ lwu(t1, Address(t1, offset));
       __ bltu(x10, t1, done);
       __ j(*overflow); // offset is too large so we have to use j instead of bgeu here
     }
@@ -1190,7 +1190,7 @@ if (UseG1GC) {
   const Address field_address(local_0, referent_offset);
   //BarrierSetAssembler *bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
  // bs->load_at(_masm, IN_HEAP | ON_WEAK_OOP_REF, T_OBJECT, local_0, field_address, /*tmp1*/ t1, /*tmp2*/ t0);
-  __ load_heap_oop_rv(local_0, field_address);
+  __ load_heap_oop_rv(local_0, field_address); 
 
     // Generate the G1 pre-barrier code to log the value of
     // the referent field in an SATB buffer.
