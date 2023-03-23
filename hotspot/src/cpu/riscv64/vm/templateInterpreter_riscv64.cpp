@@ -1607,7 +1607,9 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     __ andi(t0,x10,0);
     __ beqz(t0,not_weak);
     // Resolve jweak.
-    __ ld(x10, Address(x10, -JNIHandles::weak_tag_value));
+   // __ ld(x10, Address(x10, -JNIHandles::weak_tag_value));
+   __ access_load_at(T_OBJECT, IN_NATIVE | ON_PHANTOM_OOP_REF, x10,
+                 Address(x10, -JNIHandles::weak_tag_value), t, xthread);
 #if INCLUDE_ALL_GCS
     if (UseG1GC) {
       __ enter();                   // Barrier may call runtime.
@@ -1623,7 +1625,8 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     __ j(store_result);
     __ bind(not_weak);
     // Resolve (untagged) jobject.
-    __ ld(x10, Address(x10, 0));
+    //__ ld(x10, Address(x10, 0));
+    __ access_load_at(T_OBJECT, IN_NATIVE, x10, Address(x10, 0), t, xthread);
     __ bind(store_result);
     __ sd(x10, Address(fp, frame::interpreter_frame_oop_temp_offset * wordSize));
     // keep stack depth as expected by pushing oop which will eventually be discarded

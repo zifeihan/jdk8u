@@ -1897,7 +1897,9 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     __ andi(t0, x10, 0);
     __ beqz(t0, not_weak);
    // Resolve jweak.
-    __ ld(x10, Address(x10, -JNIHandles::weak_tag_value));
+    //__ ld(x10, Address(x10, -JNIHandles::weak_tag_value));
+    __ access_load_at(T_OBJECT, IN_NATIVE | ON_PHANTOM_OOP_REF, x10,
+                 Address(x10, -JNIHandles::weak_tag_value), t1, xthread);
     __ verify_oop(x10);
 #if INCLUDE_ALL_GCS
    if (UseG1GC) {
@@ -1912,7 +1914,8 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     __ j(done);
     __ bind(not_weak);
    // Resolve (untagged) jobject.
-    __ ld(x10, Address(x10, 0));
+    //__ ld(x10, Address(x10, 0));
+    __ access_load_at(T_OBJECT, IN_NATIVE, x10, Address(x10, 0), t1, xthread);
     __ verify_oop(x10);
     __ bind(done);
   }
