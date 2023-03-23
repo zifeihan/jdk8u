@@ -1190,7 +1190,7 @@ if (UseG1GC) {
   const Address field_address(local_0, referent_offset);
   //BarrierSetAssembler *bs = BarrierSetRv::barrier_set()->barrier_set_assembler();
  // bs->load_at(_masm, IN_HEAP | ON_WEAK_OOP_REF, T_OBJECT, local_0, field_address, /*tmp1*/ t1, /*tmp2*/ t0);
-  __ load_heap_oop_rv(local_0, field_address); 
+  __ load_heap_oop_rv(local_0, field_address);
 
     // Generate the G1 pre-barrier code to log the value of
     // the referent field in an SATB buffer.
@@ -1543,7 +1543,7 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     }
   }
 
-  // 
+  // check for safepoint operation in progress and/or pending suspend requests
   {
     Label L, Continue;
     //__ safepoint_poll_acquire(L);
