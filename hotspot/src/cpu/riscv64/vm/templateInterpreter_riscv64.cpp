@@ -1105,8 +1105,8 @@ void TemplateInterpreterGenerator::generate_fixed_frame(bool native_call) {
   {
     __ load_mirror(t0, xmethod);
     __ sd(t0, Address(sp, 4 * wordSize));
-  }*/
-  __ sd(zr, Address(sp, 5 * wordSize));
+  }
+  __ sd(zr, Address(sp, 5 * wordSize));*/
 
   __ load_constant_pool_cache(xcpool, xmethod);
   __ sd(xcpool, Address(sp, 3 * wordSize));

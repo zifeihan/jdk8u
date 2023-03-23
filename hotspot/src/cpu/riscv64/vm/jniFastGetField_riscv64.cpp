@@ -93,6 +93,7 @@ address JNI_FastGetField::generate_fast_get_int_field0(BasicType type) {
   bs->try_resolve_jobject_in_native(masm, c_rarg0, robj, t0, slow)*/;
   STATIC_ASSERT(JNIHandles::weak_tag_mask == 1);
   __ andi(robj, robj, ~JNIHandles::weak_tag_mask);
+  __ ld(robj, Address(robj, 0));
 
   __ srli(roffset, c_rarg2, 2);                // offset
 
