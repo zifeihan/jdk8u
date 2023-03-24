@@ -94,6 +94,9 @@ case "$ARCH" in
   i586)
     ARCH=i386
     ;;
+  riscv64)
+    ARCH=riscv64
+    ;;
   i686)
     ARCH=i386
     ;;

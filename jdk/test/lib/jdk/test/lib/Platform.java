@@ -219,6 +219,10 @@ public class Platform {
         return isArch("aarch64");
     }
 
+    public static boolean isRISCV64() {
+        return isArch("riscv64");
+    }
+
     public static boolean isARM() {
         return isArch("arm.*");
     }

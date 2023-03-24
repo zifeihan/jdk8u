@@ -81,7 +81,7 @@ public class Settings extends TestHelper {
         String stackSize = "256"; // in kb
         if (getArch().equals("ppc64") || getArch().equals("ppc64le")) {
             stackSize = "800";
-        } else if (getArch().equals("aarch64")) {
+        } else if (getArch().equals("aarch64") || getArch().equals("riscv64")) {
             /*
              * The max value of minimum stack size allowed for aarch64 can be estimated as
              * such: suppose the vm page size is 64KB and the test runs with a debug build,

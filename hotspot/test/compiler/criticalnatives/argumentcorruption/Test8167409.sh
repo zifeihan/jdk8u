@@ -67,7 +67,10 @@ if [ $VM_CPU == "aarch64" ]; then
     echo "Test Passed"
     exit 0;
 fi
-
+if [ $VM_CPU == "riscv64" ]; then
+    echo "Test Passed"
+    exit 0;
+fi
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}

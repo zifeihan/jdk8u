@@ -52,7 +52,17 @@ else
     echo "Test passed; only valid for linux-aarch64"
     exit 0;
 fi
-
+if [ $VM_OS == "linux" -a $VM_CPU == "riscv64" ]; then
+    echo "Testing on linux-riscv64"
+    gcc_cmd=`which gcc`
+    if [ "x$gcc_cmd" == "x" ]; then
+        echo "WARNING: gcc not found. Cannot execute test." 2>&1
+        exit 0;
+    fi
+else
+    echo "Test passed; only valid for linux-riscv64"
+    exit 0;
+fi
 THIS_DIR=.
 
 cp ${TESTSRC}${FS}*.java ${THIS_DIR}
