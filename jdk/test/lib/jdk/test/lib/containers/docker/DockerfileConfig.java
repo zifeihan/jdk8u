@@ -47,6 +47,8 @@ public class DockerfileConfig {
         switch (Platform.getOsArch()) {
             case "aarch64":
                 return "aarch64/ubuntu";
+            case "riscv64":
+                return "riscv64/ubuntu";
             case "ppc64le":
                 return "ppc64le/ubuntu";
             case "s390x":
@@ -65,6 +67,7 @@ public class DockerfileConfig {
 
         switch (Platform.getOsArch()) {
             case "aarch64":
+            case "riscv64":
             case "ppc64le":
             case "s390x":
                 return "latest";
