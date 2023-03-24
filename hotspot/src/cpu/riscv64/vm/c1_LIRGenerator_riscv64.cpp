@@ -325,7 +325,7 @@ void LIRGenerator::do_StoreIndexed(StoreIndexed* x) {  assert(x->is_pinned(),"")
   }
 
   // emit array address setup early so it schedules better
-  // FIXME?  No harm in this on aarch64, and it might help
+  // FIXME?  No harm in this on riscv64, and it might help
   LIR_Address* array_addr = emit_array_address(array.result(), index.result(), x->elt_type(), obj_store);
 
   if (GenerateRangeChecks && needs_range_check) {
@@ -1152,7 +1152,7 @@ void LIRGenerator::do_CheckCast(CheckCast* x) {
 
   CodeEmitInfo* patching_info = NULL;
   if (!x->klass()->is_loaded() ||
-      (PatchALot && !x->is_incompatible_class_change_check() && !x->is_invokespecial_receiver_check())) {
+      (PatchALot && !x->is_incompatible_class_change_check() )) {
     // must do this before locking the destination register as an oop register,
     // and before the obj is loaded (the latter is for deoptimization)
     patching_info = state_for(x, x->state_before());

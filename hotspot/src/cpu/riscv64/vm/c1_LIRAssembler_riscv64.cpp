@@ -1173,7 +1173,7 @@ void LIR_Assembler::profile_object(ciMethodData* md, ciProfileData* data, Regist
   // Object is null, update MDO and exit
   Register mdo = klass_RInfo;
   __ mov_metadata(mdo, md->constant_encoding());
-  Address data_addr = __ form_address(t1, mdo, md->byte_offset_of_slot(data, DataLayout::flags_offset()));
+  Address data_addr = __ form_address(t1, mdo, md->byte_offset_of_slot(data, DataLayout::header_offset()));
   int header_bits = DataLayout::flag_mask_to_header_mask(BitData::null_seen_byte_constant());
   __ lbu(t0, data_addr);
   __ ori(t0, t0, header_bits);
@@ -1410,6 +1410,8 @@ void LIR_Assembler::emit_static_call_stub() {
 
   __ relocate(static_stub_Relocation::spec(call_pc));
   __ emit_static_call_stub();
+  /*__ mov_metadata(xmethod, (Metadata*)NULL);
+  __ movptr(t0, 0);*/
 
   assert(__ offset() - start <= call_stub_size, "stub too big");
   __ end_a_stub();
