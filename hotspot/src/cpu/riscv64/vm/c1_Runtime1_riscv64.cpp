@@ -728,7 +728,8 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         // allocations.
         // Otherwise, just go to the slow path.
         if ((id == fast_new_instance_id || id == fast_new_instance_init_check_id) &&
-            !UseTLAB && Universe::heap()->supports_inline_contig_alloc()) {
+          //  !UseTLAB && Universe::heap()->supports_inline_contig_alloc()) {
+             UseTLAB && FastTLABRefill) {
           Label slow_path;
           Register obj_size   = x12;
           Register tmp1       = x9;
@@ -740,7 +741,8 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           const int zr_offset = 0;
           __ addi(sp, sp, -(sp_offset * wordSize));
           __ sd(x9, Address(sp, x9_offset * wordSize));
-          __ sd(zr, Address(sp, zr_offset * wordSize));
+          //__ sd(zr, Address(sp, zr_offset * wordSize));
+          __ sd(x15, Address(sp, zr_offset * wordSize));
 
           if (id == fast_new_instance_init_check_id) {
             // make sure the klass is initialized
@@ -774,13 +776,15 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           __ initialize_object(obj, klass, obj_size, 0, tmp1, tmp2, /* is_tlab_allocated */ false);
           __ verify_oop(obj);
           __ ld(x9, Address(sp, x9_offset * wordSize));
-          __ ld(zr, Address(sp, zr_offset * wordSize));
+          //__ ld(zr, Address(sp, zr_offset * wordSize));
+          __ ld(x15, Address(sp, zr_offset * wordSize));
           __ addi(sp, sp, sp_offset * wordSize);
           __ ret();
 
           __ bind(slow_path);
           __ ld(x9, Address(sp, x9_offset * wordSize));
-          __ ld(zr, Address(sp, zr_offset * wordSize));
+          //__ ld(zr, Address(sp, zr_offset * wordSize));
+          __ ld(x15, Address(sp, zr_offset * wordSize));
           __ addi(sp, sp, sp_offset * wordSize);
         }
 
@@ -857,7 +861,8 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         // If TLAB is disabled, see if there is support for inlining contiguous
         // allocations.
         // Otherwise, just go to the slow path.
-        if (!UseTLAB && Universe::heap()->supports_inline_contig_alloc()) {
+       // if (!UseTLAB && Universe::heap()->supports_inline_contig_alloc()) {
+         if (UseTLAB && FastTLABRefill) {
           Register arr_size   = x14;
           Register tmp1       = x12;
           Register tmp2       = x15;
@@ -1086,7 +1091,7 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         StubFrame f(sasm, "deoptimize", dont_gc_arguments);
         OopMap* oop_map = save_live_registers(sasm);
         assert_cond(oop_map != NULL);
-        f.load_argument(0, c_rarg1);
+       // f.load_argument(0, c_rarg1);
         int call_offset = __ call_RT(noreg, noreg, CAST_FROM_FN_PTR(address, deoptimize), c_rarg1);
 
         oop_maps = new OopMapSet();
