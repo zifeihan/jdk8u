@@ -579,7 +579,7 @@ address TemplateInterpreterGenerator::generate_ArrayIndexOutOfBounds_handler(con
   // convention: expect aberrant index in register x11
   __ zero_ext(c_rarg2, x11, 32);
   // convention: expect array in register x13
-  __ mv(c_rarg1, x13);
+  __ mv(c_rarg1, (address)name);
   __ call_VM(noreg,
              CAST_FROM_FN_PTR(address,
                               InterpreterRuntime::
