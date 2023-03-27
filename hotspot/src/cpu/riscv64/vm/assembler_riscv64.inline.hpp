@@ -29,6 +29,7 @@
 
 #include "asm/assembler.inline.hpp"
 #include "asm/codeBuffer.hpp"
+#include "code/codeCache.hpp"
 
 inline bool is_imm_in_range(long value, unsigned bits, unsigned align_bits) {
   intx sign_bits = (value >> (bits + align_bits - 1));
