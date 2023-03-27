@@ -2083,9 +2083,9 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
         }
       }
     }
-    __ bind(dispatch);
+   
   }
-
+ __ bind(dispatch);
   // Pre-load the next target bytecode into t0
   __ load_unsigned_byte(t0, Address(xbcp, 0));
 
