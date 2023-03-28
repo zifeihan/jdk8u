@@ -2177,7 +2177,19 @@ void LIR_Assembler::typecheck_lir_store(LIR_OpTypeCheck* op, bool should_profile
   Label *failure_target = should_profile ? &profile_cast_failure : stub->entry();
 
   if (should_profile) {
-    profile_object(md, data, value, klass_RInfo, &done);
+    //profile_object(md, data, value, klass_RInfo, &done);
+  Label not_null;
+  __ bnez(value, not_null);
+  // Object is null, update MDO and exit
+  Register mdo = klass_RInfo;
+  __ mov_metadata(mdo, md->constant_encoding());
+  Address data_addr = __ form_address(t1, mdo, md->byte_offset_of_slot(data, DataLayout::header_offset()));
+  int header_bits = DataLayout::flag_mask_to_header_mask(BitData::null_seen_byte_constant());
+  __ lwu(t0, data_addr);
+  __ ori(t0, t0, header_bits);
+  __ sw(t0, data_addr);
+  __ j(done);
+  __ bind(not_null);
   } else {
     __ beqz(value, done);
   }
