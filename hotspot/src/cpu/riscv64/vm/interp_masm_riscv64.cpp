@@ -1040,9 +1040,9 @@ void InterpreterMacroAssembler::set_mdp_flag_at(Register mdp_in,
   int flags_offset = in_bytes(DataLayout::header_offset());
   int header_bits = DataLayout::flag_mask_to_header_mask(flag_byte_constant);
   // Set the flag
-  ld(t1, Address(mdp_in, flags_offset));
+  lw(t1, Address(mdp_in, flags_offset));
   ori(t1, t1, header_bits);
-  sd(t1, Address(mdp_in, flags_offset));
+  sw(t1, Address(mdp_in, flags_offset));
 }
 
 
