@@ -1175,9 +1175,9 @@ void LIR_Assembler::profile_object(ciMethodData* md, ciProfileData* data, Regist
   __ mov_metadata(mdo, md->constant_encoding());
   Address data_addr = __ form_address(t1, mdo, md->byte_offset_of_slot(data, DataLayout::header_offset()));
   int header_bits = DataLayout::flag_mask_to_header_mask(BitData::null_seen_byte_constant());
-  __ lwu(t0, data_addr);
+  __ ld(t0, data_addr);
   __ ori(t0, t0, header_bits);
-  __ sb(t0, data_addr);
+  __ sd(t0, data_addr);
   __ j(*obj_is_null);
   __ bind(not_null);
 }

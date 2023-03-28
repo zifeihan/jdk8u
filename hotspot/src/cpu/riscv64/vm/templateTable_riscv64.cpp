@@ -2051,6 +2051,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
         // Test to see if we should create a method data oop
         //__ lwu(t0, Address(t1, in_bytes(MethodCounters::interpreter_profile_limit_offset())));
         __ la(t0, ExternalAddress((address) &InvocationCounter::InterpreterProfileLimit)); 
+        __ lwu(t0, t0);
         __ blt(x10, t0, dispatch);
 
         // if no method data exists, go to profile method
@@ -2059,7 +2060,8 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
         if (UseOnStackReplacement) {
           // check for overflow against x11 which is the MDO taken count
           //__ lwu(t0, Address(t1, in_bytes(MethodCounters::interpreter_backward_branch_limit_offset())));
-          __ la(t0, ExternalAddress((address) &InvocationCounter::InterpreterBackwardBranchLimit)); 
+          __ la(t0, ExternalAddress((address) &InvocationCounter::InterpreterBackwardBranchLimit));
+          __ lwu(t0, t0); 
           __ bltu(x11, t0, dispatch); // Intel == Assembler::below, lo:unsigned lower
 
           // When ProfileInterpreter is on, the backedge_count comes
@@ -2079,6 +2081,7 @@ void TemplateTable::branch(bool is_jsr, bool is_wide)
           // counters
           //__ lwu(t0, Address(t1, in_bytes(MethodCounters::interpreter_backward_branch_limit_offset())));
           __ la(t0, ExternalAddress((address) &InvocationCounter::InterpreterBackwardBranchLimit));
+          __ lwu(t0, t0);
           __ bgeu(x10, t0, backedge_counter_overflow); // Intel == Assembler::aboveEqual
         }
       }
