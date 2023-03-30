@@ -75,8 +75,7 @@ using MacroAssembler::null_check;
     Register var_size_in_bytes,        // object size in bytes if unknown at compile time; invalid otherwise
     int      con_size_in_bytes,        // object size in bytes if   known at compile time
     Register tmp1,                     // temp register
-    Register tmp2,                     // temp register
-    bool     is_tlab_allocated         // the object was allocated in a TLAB; relevant for the implementation of ZeroTLAB
+    Register tmp2      // the object was allocated in a TLAB; relevant for the implementation of ZeroTLAB
   );
 
   // allocation of fixed-size objects

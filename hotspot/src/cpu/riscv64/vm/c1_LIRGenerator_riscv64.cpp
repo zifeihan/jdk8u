@@ -229,7 +229,16 @@ LIR_Address* LIRGenerator::emit_array_address(LIR_Opr array_opr, LIR_Opr index_o
     }
     addr = new LIR_Address(array_opr, index_opr, LIR_Address::scale(type), offset_in_bytes, type);
   }
-  return addr;
+    if (needs_card_mark) {
+    // This store will need a precise card mark, so go ahead and
+    // compute the full adddres instead of computing once for the
+    // store and again for the card mark.
+    LIR_Opr tmp = new_pointer_register();
+    __ leal(LIR_OprFact::address(addr), tmp);
+    return new LIR_Address(tmp, type);
+  } else {
+    return addr;
+  }
 }
 
 LIR_Opr LIRGenerator::load_immediate(int x, BasicType type) {

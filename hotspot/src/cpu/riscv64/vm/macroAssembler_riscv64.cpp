@@ -58,6 +58,13 @@
 #endif
 #ifdef PRODUCT
 #define BLOCK_COMMENT(str) /* nothing */
+#define STOP(error) stop(error)
+#else
+#define BLOCK_COMMENT(str) block_comment(str)
+#define STOP(error) block_comment(error); stop(error)
+#endif
+#ifdef PRODUCT
+#define BLOCK_COMMENT(str) /* nothing */
 #else
 #define BLOCK_COMMENT(str) block_comment(str)
 #endif
@@ -3233,6 +3240,169 @@ void MacroAssembler::tlab_allocate(Register obj,
   }
  }
 
+void MacroAssembler::verify_tlab() {
+#ifdef ASSERT
+  if (UseTLAB && VerifyOops) {
+    Label next, ok;
+
+    //stp(t1, t0, Address(pre(sp, -16)));
+    addi(sp, sp, -16);
+    sd(t0,Address(sp, 8));
+    sd(t1, Address(sp));
+
+    ld(t1, Address(xthread, in_bytes(JavaThread::tlab_top_offset())));
+    ld(t0, Address(xthread, in_bytes(JavaThread::tlab_start_offset())));
+    //cmp(t1, t0);
+    //br(Assembler::HS, next);
+    bgt(t1, t0, next);
+    STOP("assert(top >= start)");
+    should_not_reach_here();
+
+    bind(next);
+    ld(t1, Address(xthread, in_bytes(JavaThread::tlab_end_offset())));
+    ld(t0, Address(xthread, in_bytes(JavaThread::tlab_top_offset())));
+    //cmp(t1, t0);
+    //br(Assembler::HS, ok);
+    bgt(t1, t0, ok);
+    STOP("assert(top <= end)");
+    should_not_reach_here();
+
+    bind(ok);
+    //ldp(t1, t0, Address(post(sp, 16)));
+    ld(t1, Address(sp));
+    ld(t0, Address(sp, 8));
+    addi(sp, sp, 16);
+  }
+#endif
+}
+
+Register MacroAssembler::tlab_refill(Label& retry,
+                                     Label& try_eden,
+                                     Label& slow_case) {
+  Register top = x10;
+  Register tmp1  = x12;
+  Register tmp2  = x14;
+  assert_different_registers(top, xthread, tmp1, tmp2, /* preserve: */ x9, x13);
+  Label do_refill, discard_tlab;
+
+  if (CMSIncrementalMode || !Universe::heap()->supports_inline_contig_alloc()) {
+    // No allocation in the shared eden.
+    j(slow_case);
+  }
+
+  ld(top, Address(xthread, in_bytes(JavaThread::tlab_top_offset())));
+  ld(tmp1,  Address(xthread, in_bytes(JavaThread::tlab_end_offset())));
+
+  // calculate amount of free space
+  sub(tmp1, tmp1, top);
+  srli(tmp1, tmp1, LogHeapWordSize);
+
+  // Retain tlab and allocate object in shared space if
+  // the amount free in the tlab is too large to discard.
+
+  ld(t0, Address(xthread, in_bytes(JavaThread::tlab_refill_waste_limit_offset())));
+  //cmp(t1, t0);
+  //br(Assembler::LE, discard_tlab);
+  blt(tmp1, t0, discard_tlab);
+
+  // Retain
+  // ldr(t0, Address(xthread, in_bytes(JavaThread::tlab_refill_waste_limit_offset())));
+  mv(tmp2, (int32_t) ThreadLocalAllocBuffer::refill_waste_limit_increment());
+  add(t0, t0, tmp2);
+  sd(t0, Address(xthread, in_bytes(JavaThread::tlab_refill_waste_limit_offset())));
+
+  if (TLABStats) {
+    // increment number of slow_allocations
+    //addmw(Address(xthread, in_bytes(JavaThread::tlab_slow_allocations_offset())),
+      //   1, t0);
+    add_memory_int32(Address(xthread, in_bytes(JavaThread::tlab_slow_allocations_offset())), 1);
+  }
+  j(try_eden);
+
+  bind(discard_tlab);
+  if (TLABStats) {
+    // increment number of refills
+    //addmw(Address(xthread, in_bytes(JavaThread::tlab_number_of_refills_offset())), 1,
+      //   t0);
+    add_memory_int32(Address(xthread, in_bytes(JavaThread::tlab_number_of_refills_offset())), 1);
+    // accumulate wastage -- t1 is amount free in tlab
+    //addmw(Address(xthread, in_bytes(JavaThread::tlab_fast_refill_waste_offset())), t1,
+      //   t0);
+    lwu(t0, Address(xthread, in_bytes(JavaThread::tlab_fast_refill_waste_offset())));
+    add(t0, t0, tmp1);
+    sw(t0, Address(xthread, in_bytes(JavaThread::tlab_fast_refill_waste_offset())));
+}
+  
+
+  // if tlab is currently allocated (top or end != null) then
+  // fill [top, end + alignment_reserve) with array object
+  beqz(top, do_refill);
+
+  // set up the mark word
+  mv(t0, (intptr_t)markOopDesc::prototype()->copy_set_hash(0x2));
+  sd(t0, Address(top, oopDesc::mark_offset_in_bytes()));
+  // set the length to the remaining space
+  sub(tmp1, tmp1, typeArrayOopDesc::header_size(T_INT));
+  add(tmp1, tmp1, (int32_t)ThreadLocalAllocBuffer::alignment_reserve());
+  slli(tmp1, tmp1, log2_intptr(HeapWordSize/sizeof(jint)));
+  sw(tmp1, Address(top, arrayOopDesc::length_offset_in_bytes()));
+  // set klass to intArrayKlass
+  {
+     int32_t offset = 0;
+    // dubious reloc why not an oop reloc?
+    la_patchable(t0, ExternalAddress((address)Universe::intArrayKlassObj_addr()),
+         offset);
+    ld(tmp1, Address(t0, offset));
+  }
+  // store klass last.  concurrent gcs assumes klass length is valid if
+  // klass field is not null.
+  store_klass(top, tmp1);
+
+  mv(tmp1, top);
+  ld(t0, Address(xthread, in_bytes(JavaThread::tlab_start_offset())));
+  sub(tmp1, tmp1, t0);
+  incr_allocated_bytes(tmp1, 0, t0);
+
+  // refill the tlab with an eden allocation
+  bind(do_refill);
+  ld(tmp1, Address(xthread, in_bytes(JavaThread::tlab_size_offset())));
+  slli(tmp1, tmp1, LogHeapWordSize);
+  // allocate new tlab, address returned in top
+  eden_allocate(top, tmp1, 0, tmp2, slow_case);
+
+  // Check that t1 was preserved in eden_allocate.
+#ifdef ASSERT
+  if (UseTLAB) {
+    Label ok;
+    Register tsize = x14;
+    assert_different_registers(tsize, xthread, tmp1);
+   // str(tsize, Address(pre(sp, -16)));
+    addi(sp, sp, -16);
+    sd(tsize, Address(sp, 0));
+    ld(tsize, Address(xthread, in_bytes(JavaThread::tlab_size_offset())));
+    slli(tsize, tsize, LogHeapWordSize);
+    //cmp(t1, tsize);
+    //br(Assembler::EQ, ok);
+    beq(tmp1, tsize, ok);
+    STOP("assert(t1 != tlab size)");
+    should_not_reach_here();
+
+    bind(ok);
+    //ldr(tsize, Address(post(sp, 16)));
+    ld(tsize, Address(sp, 0));
+    addi(sp, sp , 2 * wordSize);
+  }
+#endif
+  sd(top, Address(xthread, in_bytes(JavaThread::tlab_start_offset())));
+  sd(top, Address(xthread, in_bytes(JavaThread::tlab_top_offset())));
+  add(top, top, tmp1);
+  sub(top, top, (int32_t)ThreadLocalAllocBuffer::alignment_reserve_in_bytes());
+  sd(top, Address(xthread, in_bytes(JavaThread::tlab_end_offset())));
+  verify_tlab();
+  j(retry);
+
+  return xthread; // for use by caller
+}
 // Defines obj, preserves var_size_in_bytes
 void MacroAssembler::eden_allocate(Register obj,
                                    Register var_size_in_bytes,

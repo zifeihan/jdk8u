@@ -311,7 +311,8 @@ class MacroAssembler: public Assembler {
     Label&   slow_case,             // continuation point of fast allocation fails
     bool is_far = false
   );
-
+Register tlab_refill(Label& retry_tlab, Label& try_eden, Label& slow_case);
+void verify_tlab();
   // Test sub_klass against super_klass, with fast and slow paths.
 
   // The fast path produces a tri-state answer: yes / no / maybe-slow.
