@@ -361,9 +361,9 @@ OopMapSet* Runtime1::generate_exception_throw(StubAssembler* sasm, address targe
   if (!has_argument) {
     call_offset = __ call_RT(noreg, noreg, target);
   } else {
-    __ mv(c_rarg1, t0);
-    __ mv(c_rarg2, t1);
-    call_offset = __ call_RT(noreg, noreg, target);
+    //__ mv(c_rarg1, t0);
+   // __ mv(c_rarg2, t1);
+    call_offset = __ call_RT(noreg, noreg, target, t0);
   }
   OopMapSet* oop_maps = new OopMapSet();
   assert_cond(oop_maps != NULL);
@@ -767,13 +767,29 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
             __ bind(ok);
           }
 #endif // ASSERT
-
+         Label retry_tlab, try_eden;
+          __ tlab_refill(retry_tlab, try_eden, slow_path); // does not destroy r3 (klass), returns r5
           // get the instance size
+          __ bind(retry_tlab);
+          __ lwu(obj_size, Address(klass, Klass::layout_helper_offset()));
+
+          __ tlab_allocate(obj, obj_size, 0, tmp1, tmp2, slow_path);
+
+          __ initialize_object(obj, klass, obj_size, 0, tmp1, tmp2);
+          __ verify_oop(obj);
+          __ ld(x9, Address(sp, x9_offset * wordSize));
+          //__ ld(zr, Address(sp, zr_offset * wordSize));
+          __ ld(x15, Address(sp, zr_offset * wordSize));
+          __ addi(sp, sp, sp_offset * wordSize);
+          __ ret();
+
+          __ bind(try_eden);
           __ lwu(obj_size, Address(klass, Klass::layout_helper_offset()));
 
           __ eden_allocate(obj, obj_size, 0, tmp1, slow_path);
+          __ incr_allocated_bytes(obj_size, 0, t0);
 
-          __ initialize_object(obj, klass, obj_size, 0, tmp1, tmp2, /* is_tlab_allocated */ false);
+          __ initialize_object(obj, klass, obj_size, 0, tmp1, tmp2);
           __ verify_oop(obj);
           __ ld(x9, Address(sp, x9_offset * wordSize));
           //__ ld(zr, Address(sp, zr_offset * wordSize));
@@ -868,13 +884,15 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           Register tmp2       = x15;
           Label slow_path;
           assert_different_registers(length, klass, obj, arr_size, tmp1, tmp2);
-
+          //__ bind(try_eden);
           // check that array length is small enough for fast path.
           __ mv(t0, C1_MacroAssembler::max_array_allocation_length);
           __ bgtu(length, t0, slow_path);
-
-          // get the allocation size: round_up(hdr + length << (layout_helper & 0x1F))
-          __ lwu(tmp1, Address(klass, Klass::layout_helper_offset()));
+          Label retry_tlab, try_eden;
+          const Register thread =
+          __ tlab_refill(retry_tlab, try_eden, slow_path); 
+          __ bind(retry_tlab);
+                   __ lwu(tmp1, Address(klass, Klass::layout_helper_offset()));
           __ andi(t0, tmp1, 0x1f);
           __ sll(arr_size, length, t0);
           int lh_header_size_width = exact_log2(Klass::_lh_header_size_mask + 1);
@@ -885,8 +903,37 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           __ addi(arr_size, arr_size, MinObjAlignmentInBytesMask); // align up
           __ andi(arr_size, arr_size, ~MinObjAlignmentInBytesMask);
 
-          __ eden_allocate(obj, arr_size, 0, tmp1, slow_path); // preserves arr_size
+          __ tlab_allocate(obj, arr_size, 0, tmp1, tmp2, slow_path); // preserves arr_size
+          //__ incr_allocated_bytes(arr_size, 0, t0);
+          __ initialize_header(obj, klass, length, tmp1, tmp2);
+          __ lbu(tmp1, Address(klass,
+                               in_bytes(Klass::layout_helper_offset()) +
+                               (Klass::_lh_header_size_shift / BitsPerByte)));
+          assert(Klass::_lh_header_size_shift % BitsPerByte == 0, "bytewise");
+          assert(Klass::_lh_header_size_mask <= 0xFF, "bytewise");
+          __ andi(tmp1, tmp1, Klass::_lh_header_size_mask);
+          __ sub(arr_size, arr_size, tmp1); // body length
+          __ add(tmp1, tmp1, obj);       // body start
+          __ initialize_body(tmp1, arr_size, 0, tmp2);
+          __ membar(MacroAssembler::StoreStore);
+          __ verify_oop(obj);
+          __ ret();
 
+          __ bind(try_eden);
+          // get the allocation size: round_up(hdr + length << (layout_helper & 0x1F))
+          __ lwu(tmp1, Address(klass, Klass::layout_helper_offset()));
+          __ andi(t0, tmp1, 0x1f);
+          __ sll(arr_size, length, t0);
+         // int lh_header_size_width = exact_log2(Klass::_lh_header_size_mask + 1);
+        //  int lh_header_size_msb = Klass::_lh_header_size_shift + lh_header_size_width;
+          __ slli(tmp1, tmp1, registerSize - lh_header_size_msb);
+          __ srli(tmp1, tmp1, registerSize - lh_header_size_width);
+          __ add(arr_size, arr_size, tmp1);
+          __ addi(arr_size, arr_size, MinObjAlignmentInBytesMask); // align up
+          __ andi(arr_size, arr_size, ~MinObjAlignmentInBytesMask);
+
+          __ eden_allocate(obj, arr_size, 0, tmp1, slow_path); // preserves arr_size
+          __ incr_allocated_bytes(arr_size, 0, t0);
           __ initialize_header(obj, klass, length, tmp1, tmp2);
           __ lbu(tmp1, Address(klass,
                                in_bytes(Klass::layout_helper_offset()) +
