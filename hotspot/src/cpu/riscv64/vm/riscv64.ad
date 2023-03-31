@@ -750,7 +750,7 @@ class HandlerImpl {
 // predicate controlling translation of StoreCM
 bool unnecessary_storestore(const Node *storecm);
 
-bool is_CAS(int opcode, bool maybe_volatile);
+bool is_CAS(int opcode);
 
 // predicate controlling translation of CompareAndSwapX
 bool needs_acquiring_load_exclusive(const Node *load);
@@ -832,7 +832,7 @@ bool unnecessary_storestore(const Node *storecm)
 //
 // return true if opcode is one of the possible CompareAndSwapX
 // values otherwise false.
-bool is_CAS(int opcode, bool maybe_volatile)
+bool is_CAS(int opcode)
 {
   switch(opcode) {
   // We handle these
@@ -857,17 +857,17 @@ bool is_CAS(int opcode, bool maybe_volatile)
 // returns true if CAS needs to use an acquiring load otherwise false
 bool needs_acquiring_load_exclusive(const Node *n)
 {
-  assert(n != NULL && is_CAS(n->Opcode(), true), "expecting a compare and swap");
+  assert(n != NULL && is_CAS(n->Opcode()), "expecting a compare and swap");
   if (UseBarriersForVolatile) {
     return false;
   }
 
   LoadStoreNode* ldst = n->as_LoadStore();
-  if (n != NULL && is_CAS(n->Opcode(), false)) {
+ // if (n != NULL && is_CAS(n->Opcode())) {
     assert(ldst != NULL && ldst->trailing_membar() != NULL, "expected trailing membar");
-  } else {
-    return ldst != NULL && ldst->trailing_membar() != NULL;
-  }
+ // } else {
+ //   return ldst != NULL && ldst->trailing_membar() != NULL;
+ // }
   // so we can just return true here
   return true;
 }
@@ -897,6 +897,9 @@ int MachCallStaticJavaNode::ret_addr_offset()
 {
   // call should be a simple jal
   int off = 4;
+if (_method_handle_invoke) {
+    off += 4;
+  }
   return off;
 }
 
@@ -1626,7 +1629,7 @@ const bool Matcher::strict_fp_requires_explicit_rounding = false;
 
 // Are floats converted to double when stored to stack during
 // deoptimization?
-bool Matcher::float_in_double() { return false; }
+bool Matcher::float_in_double() { return true; }
 
 // Do ints take an entire long register or just half?
 // The relevant question is how the int is callee-saved:
