@@ -278,18 +278,19 @@ endif
 JTREG = $(JT_HOME)/bin/jtreg
 
 # Use agent mode
-JTREG_BASIC_OPTIONS += -agentvm
+JTREG_BASIC_OPTIONS += -othervm
 # Only run automatic tests
 JTREG_BASIC_OPTIONS += -a
 # Report details on all failed or error tests, times too
 JTREG_BASIC_OPTIONS += -v:fail,error,summary
 # Retain all files for failing tests
 JTREG_BASIC_OPTIONS += -retain:fail,error
+#JTREG_BASIC_OPTIONS += -status:fail,error
 # Ignore tests are not run and completely silent about it
 JTREG_IGNORE_OPTION = -ignore:quiet
 JTREG_BASIC_OPTIONS += $(JTREG_IGNORE_OPTION)
 # Multiply by 4 the timeout factor
-JTREG_TIMEOUT_OPTION =  -timeoutFactor:4
+JTREG_TIMEOUT_OPTION =  -timeoutFactor:16
 JTREG_BASIC_OPTIONS += $(JTREG_TIMEOUT_OPTION)
 # Add any extra options
 JTREG_BASIC_OPTIONS += $(EXTRA_JTREG_OPTIONS)
