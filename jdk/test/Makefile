@@ -265,9 +265,9 @@ endif
 # Default JTREG to run
 JTREG = $(JT_HOME)/bin/jtreg
 # run in agentvm mode
-JTREG_BASIC_OPTIONS += -agentvm
+JTREG_BASIC_OPTIONS += -othervm
 # Only run automatic tests
-JTREG_BASIC_OPTIONS += -a
+#JTREG_BASIC_OPTIONS += -a
 # Always turn on assertions
 JTREG_ASSERT_OPTION = -ea -esa
 JTREG_BASIC_OPTIONS += $(JTREG_ASSERT_OPTION)
@@ -275,14 +275,15 @@ JTREG_BASIC_OPTIONS += $(JTREG_ASSERT_OPTION)
 JTREG_BASIC_OPTIONS += -v:fail,error,summary
 # Retain all files for failing tests
 JTREG_BASIC_OPTIONS += -retain:fail,error
+#JTREG_BASIC_OPTIONS += -status:fail,error
 # Ignore tests are not run and completely silent about it
 JTREG_IGNORE_OPTION = -ignore:quiet
 JTREG_BASIC_OPTIONS += $(JTREG_IGNORE_OPTION)
 # Multiple by 4 the timeout numbers
-JTREG_TIMEOUT_OPTION =  -timeoutFactor:4
+JTREG_TIMEOUT_OPTION =  -timeoutFactor:1
 JTREG_BASIC_OPTIONS += $(JTREG_TIMEOUT_OPTION)
 # Set the max memory for jtreg control vm
-JTREG_MEMORY_OPTION = -J-Xmx512m
+JTREG_MEMORY_OPTION = -J-Xmx1024m
 JTREG_BASIC_OPTIONS += $(JTREG_MEMORY_OPTION)
 # Add any extra options
 JTREG_BASIC_OPTIONS += $(EXTRA_JTREG_OPTIONS)
@@ -292,7 +293,7 @@ JTREG_TEST_OPTIONS = $(JAVA_ARGS:%=-javaoptions:%) $(JAVA_VM_ARGS:%=-vmoption:%)
 #JTREG_GC_OPTION = -vmoption:-XX:+UseSerialGC
 #JTREG_TEST_OPTIONS += $(JTREG_GC_OPTION)
 # Set the max memory for jtreg target test vms
-JTREG_TESTVM_MEMORY_OPTION = -vmoption:-Xmx512m
+JTREG_TESTVM_MEMORY_OPTION = -vmoption:-Xmx1024m
 JTREG_TEST_OPTIONS += $(JTREG_TESTVM_MEMORY_OPTION)
 
 # Make sure jtreg exists
