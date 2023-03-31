@@ -1554,6 +1554,7 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     }
     assert(SafepointSynchronize::_not_synchronized == 0,
            "SafepointSynchronize::_not_synchronized");
+    __ bnez(t1, L);
     __ lwu(t1, Address(xthread, JavaThread::suspend_flags_offset()));
     __ beqz(t1, Continue);
     __ bind(L);
