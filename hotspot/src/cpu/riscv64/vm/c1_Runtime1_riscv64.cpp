@@ -892,7 +892,7 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
           const Register thread =
           __ tlab_refill(retry_tlab, try_eden, slow_path); 
           __ bind(retry_tlab);
-                   __ lwu(tmp1, Address(klass, Klass::layout_helper_offset()));
+          __ lwu(tmp1, Address(klass, Klass::layout_helper_offset()));
           __ andi(t0, tmp1, 0x1f);
           __ sll(arr_size, length, t0);
           int lh_header_size_width = exact_log2(Klass::_lh_header_size_mask + 1);
@@ -1379,7 +1379,16 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
         __ far_jump(RuntimeAddress(deopt_blob->unpack_with_reexecution()));
       }
       break;
+    case dtrace_object_alloc_id:
+      { // c_rarg0: object
+        StubFrame f(sasm, "dtrace_object_alloc", dont_gc_arguments);
+        save_live_registers(sasm);
 
+        __ call_VM_leaf(CAST_FROM_FN_PTR(address, SharedRuntime::dtrace_object_alloc), c_rarg0);
+
+        restore_live_registers(sasm);
+      }
+      break;
 
     default:
       {
