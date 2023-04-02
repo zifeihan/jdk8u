@@ -96,10 +96,12 @@ void MetaspaceShared::generate_vtable_methods(void** vtbl_list,
   __ enter();
   __ srli(tmp0, t0, 8);           // isolate vtable identifier.
   __ mv(tmp1, (address)vtbl_list);        // address of list of vtable pointers.
-  __ slli(tmp1,tmp0,LogBytesPerWord); // get correct vtable pointer.
+  __ slli(tmp1, tmp0, LogBytesPerWord); // get correct vtable pointer.
   __ ld(tmp1, Address(tmp1, 0));       // update vtable pointer in obj.
   __ sd(tmp1, Address(c_rarg0));  
   //__ add(rscratch1, tmp1, rscratch1, ext::uxtb, LogBytesPerWord); // address of real method pointer.
+  __ slli(t1, t0, LogBytesPerWord);
+  __ add(t0, tmp1, t1);
   __ ld(t0, Address(t0, 0)); 
   //__ ldr(rscratch1, Address(rscratch1)); // get real method pointer.
   __ jr(t0);                     // jump to the real method.
