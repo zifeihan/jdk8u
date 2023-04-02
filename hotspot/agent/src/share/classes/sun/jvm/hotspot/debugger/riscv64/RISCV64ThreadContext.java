@@ -28,7 +28,7 @@
  import sun.jvm.hotspot.debugger.*;
  import sun.jvm.hotspot.debugger.cdbg.*;
  
- /** Specifies the thread context on aarch64 platforms; only a sub-portion
+ /** Specifies the thread context on riscv64 platforms; only a sub-portion
   * of the context is guaranteed to be present on all operating
   * systems. */
  
