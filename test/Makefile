@@ -86,10 +86,13 @@ hotspot_%:
 TIER1_TESTOUTPUT="$(ALT_OUTPUTDIR)/testoutput"
 TIER1_STATUS_FILE="$(TIER1_TESTOUTPUT)/tier1_exitcode.txt"
 
+
+TIER2_TESTOUTPUT="$(ALT_OUTPUTDIR)/testoutput"
+TIER2_STATUS_FILE="$(TIER2_TESTOUTPUT)/tier2_exitcode.txt"
 # Note: Test failures are handled via summary_tier1 as the
 #       tier1 targets are never aborted even if tests fail.
 tier1: prep_tier1 jdk_tier1 langtools_tier1 hotspot_tier1 summary_tier1
-
+tier2: jdk_tier2 langtools_tier2 hotspot_tier2 summary_tier2
 prep_tier1:
 	@rm -rf $(TIER1_STATUS_FILE)
 
@@ -111,6 +114,21 @@ summary_tier1:
 	  echo "-------------- Test Summary ------------"; \
 	  echo "")
 
+summary_tier2:
+	@(EXIT_VAL=0; \
+	  echo ""; \
+	  echo "-------------- Test Summary ------------"; \
+	  echo ""; \
+	  for test_dir in $$(find "$(ALT_OUTPUTDIR)" -type d -name \*_tier2); do \
+	    $(call SUBDIR_SUMMARY, $${test_dir}); \
+	    EXIT_VAL=$$(expr $${EXIT_VAL} + $$(cat $${test_dir}/exitcode.txt)); \
+	  done; \
+	  echo $${EXIT_VAL} > $(TIER1_STATUS_FILE); \
+	  echo "For details see:"; \
+	  echo $(TIER2_TESTOUTPUT); \
+	  echo ""; \
+	  echo "-------------- Test Summary ------------"; \
+	  echo "")
 #
 # jtreg_tests
 #
