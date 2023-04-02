@@ -95,7 +95,7 @@ public class SHAOptionsBase extends CommandLineOptionTest {
                 default:
                     throw new Error("Unexpected option " + optionName);
             }
-        } else if (Platform.isAArch64()) {
+        } else if (Platform.isAArch64() || Platform.isRiscv64()) {
             switch (optionName) {
                 case SHAOptionsBase.USE_SHA_OPTION:
                     return SHAOptionsBase.SHA_INSTRUCTIONS_ARE_NOT_AVAILABLE;

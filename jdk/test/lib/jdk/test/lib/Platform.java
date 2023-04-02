@@ -219,7 +219,7 @@ public class Platform {
         return isArch("aarch64");
     }
 
-    public static boolean isRISCV64() {
+    public static boolean isRiscv64() {
         return isArch("riscv64");
     }
 

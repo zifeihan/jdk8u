@@ -37,6 +37,7 @@ public class GenericTestCaseForOtherCPU extends
         // Execute the test case on any CPU except SPARC and X86
         super(optionName, new NotPredicate(new OrPredicate(Platform::isSparc,
                 new OrPredicate(Platform::isAArch64,
+                new OrPredicate(Platform::isRiscv64,
                 new OrPredicate(Platform::isPPC,
                 new OrPredicate(Platform::isX64, Platform::isX86))))));
     }
