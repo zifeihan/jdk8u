@@ -27,13 +27,13 @@ import com.oracle.java.testlibrary.cli.CommandLineOptionTest;
 import com.oracle.java.testlibrary.cli.predicate.AndPredicate;
 
 /**
- * Generic test case for SHA-related options targeted to Riscv64 CPUs which
+ * Generic test case for SHA-related options targeted to AArch64 CPUs which
  * support instructions required by the tested option.
  */
-public class GenericTestCaseForSupportedRiscv64CPU extends
+public class GenericTestCaseForSupportedAArch64CPU extends
         SHAOptionsBase.TestCase {
-    public GenericTestCaseForSupportedRiscv64CPU(String optionName) {
-        super(optionName, new AndPredicate(Platform::isRiscv64,
+    public GenericTestCaseForSupportedAArch64CPU(String optionName) {
+        super(optionName, new AndPredicate(Platform::isAArch64,
                 SHAOptionsBase.getPredicateForOption(optionName)));
     }
 
