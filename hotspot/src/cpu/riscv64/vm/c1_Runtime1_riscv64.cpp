@@ -1404,5 +1404,126 @@ OopMapSet* Runtime1::generate_code_for(StubID id, StubAssembler* sasm) {
 }
 
 #undef __
+static bool caller_is_deopted() {
+  JavaThread* thread = JavaThread::current();
+  RegisterMap reg_map(thread, false);
+  frame runtime_frame = thread->last_frame();
+  frame caller_frame = runtime_frame.sender(&reg_map);
+  assert(caller_frame.is_compiled_frame(), "must be compiled");
+  return caller_frame.is_deoptimized_frame();
+}
 
+JRT_ENTRY(void, Runtime1::patch_code_riscv64(JavaThread* thread, Runtime1::StubID stub_id ))
+{
+  RegisterMap reg_map(thread, false);
+
+  NOT_PRODUCT(_patch_code_slowcase_cnt++;)
+  // According to the ARMv8 ARM, "Concurrent modification and
+  // execution of instructions can lead to the resulting instruction
+  // performing any behavior that can be achieved by executing any
+  // sequence of instructions that can be executed from the same
+  // Exception level, except where the instruction before
+  // modification and the instruction after modification is a B, BL,
+  // NOP, BKPT, SVC, HVC, or SMC instruction."
+  //
+  // This effectively makes the games we play when patching
+  // impossible, so when we come across an access that needs
+  // patching we must deoptimize.
+
+  if (TracePatching) {
+    tty->print_cr("Deoptimizing because patch is needed");
+  }
+
+  frame runtime_frame = thread->last_frame();
+  frame caller_frame = runtime_frame.sender(&reg_map);
+
+  // It's possible the nmethod was invalidated in the last
+  // safepoint, but if it's still alive then make it not_entrant.
+  nmethod* nm = CodeCache::find_nmethod(caller_frame.pc());
+  if (nm != NULL) {
+    nm->make_not_entrant();
+  }
+
+  Deoptimization::deoptimize_frame(thread, caller_frame.id());
+
+  // Return to the now deoptimized frame.
+}
+JRT_END
+
+int Runtime1::access_field_patching(JavaThread* thread) {
+//
+// NOTE: we are still in Java
+//
+  Thread* THREAD = thread;
+  debug_only(NoHandleMark nhm;)
+  {
+    // Enter VM mode
+
+    ResetNoHandleMark rnhm;
+    patch_code_riscv64(thread, access_field_patching_id);
+  }
+  // Back in JAVA, use no oops DON'T safepoint
+
+  // Return true if calling code is deoptimized
+
+  return caller_is_deopted();
+JRT_END
+
+
+int Runtime1::move_mirror_patching(JavaThread* thread) {
+//
+// NOTE: we are still in Java
+//
+  Thread* THREAD = thread;
+  debug_only(NoHandleMark nhm;)
+  {
+    // Enter VM mode
+
+    ResetNoHandleMark rnhm;
+    patch_code_riscv64(thread, load_mirror_patching_id);
+  }
+  // Back in JAVA, use no oops DON'T safepoint
+
+  // Return true if calling code is deoptimized
+
+  return caller_is_deopted();
+}
+
+int Runtime1::move_appendix_patching(JavaThread* thread) {
+//
+// NOTE: we are still in Java
+//
+  Thread* THREAD = thread;
+  debug_only(NoHandleMark nhm;)
+  {
+    // Enter VM mode
+
+    ResetNoHandleMark rnhm;
+    patch_code_riscv64(thread, load_appendix_patching_id);
+  }
+  // Back in JAVA, use no oops DON'T safepoint
+
+  // Return true if calling code is deoptimized
+
+  return caller_is_deopted();
+}
+
+int Runtime1::move_klass_patching(JavaThread* thread) {
+//
+// NOTE: we are still in Java
+//
+  Thread* THREAD = thread;
+  debug_only(NoHandleMark nhm;)
+  {
+    // Enter VM mode
+
+    ResetNoHandleMark rnhm;
+    patch_code_riscv64(thread, load_klass_patching_id);
+  }
+  // Back in JAVA, use no oops DON'T safepoint
+
+  // Return true if calling code is deoptimized
+
+  return caller_is_deopted();
+}
 const char *Runtime1::pd_name_for_address(address entry) { Unimplemented(); return 0; }

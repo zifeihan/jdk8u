@@ -103,6 +103,10 @@ private:
   void logic_op_reg32(Register dst, Register left, Register right, LIR_Code code);
   void logic_op_reg(Register dst, Register left, Register right, LIR_Code code);
   void logic_op_imm(Register dst, Register left, int right, LIR_Code code);
+    //static const int max_tableswitches = 20;
+ // struct tableswitch switches[max_tableswitches];
+  int tableswitch_count;
+  void init() { tableswitch_count = 0; }
 
 public:
 
