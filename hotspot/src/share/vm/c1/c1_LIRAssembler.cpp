@@ -132,7 +132,7 @@ LIR_Assembler::LIR_Assembler(Compilation* c):
  , _pending_non_safepoint_offset(0)
 {
   _slow_case_stubs = new CodeStubList();
-#ifdef TARGET_ARCH_aarch64
+#ifdef TARGET_ARCH_riscv64
   init(); // Target-dependent initialization
 #endif
 }
