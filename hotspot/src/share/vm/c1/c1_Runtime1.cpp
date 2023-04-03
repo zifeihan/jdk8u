@@ -1195,7 +1195,7 @@ JRT_END
 // completes we can check for deoptimization. This simplifies the
 // assembly code in the cpu directories.
 //
-#if ! defined(TARGET_ARCH_aarch64) && !!defined(TARGET_ARCH_riscv64) 
+#if ! defined(TARGET_ARCH_aarch64) && !defined(TARGET_ARCH_riscv64) 
 int Runtime1::move_klass_patching(JavaThread* thread) {
 //
 // NOTE: we are still in Java
