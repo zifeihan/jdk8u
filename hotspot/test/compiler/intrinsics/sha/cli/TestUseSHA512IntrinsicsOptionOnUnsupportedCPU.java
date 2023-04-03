@@ -42,6 +42,8 @@ public class TestUseSHA512IntrinsicsOptionOnUnsupportedCPU {
                         SHAOptionsBase.USE_SHA512_INTRINSICS_OPTION),
                 new GenericTestCaseForUnsupportedAArch64CPU(
                         SHAOptionsBase.USE_SHA512_INTRINSICS_OPTION),
+                new GenericTestCaseForUnsupportedRiscv64CPU(
+                                SHAOptionsBase.USE_SHA512_INTRINSICS_OPTION),
                 new GenericTestCaseForUnsupportedX86CPU(
                         SHAOptionsBase.USE_SHA512_INTRINSICS_OPTION),
                 new GenericTestCaseForOtherCPU(
