@@ -149,7 +149,7 @@ void LIR_Address::verify0() const {
 #endif
 #ifdef _LP64
   assert(base()->is_cpu_register(), "wrong base operand");
-#ifndef AARCH64
+#if !defined(AARCH64) && !defined(RISCV64)
   assert(index()->is_illegal() || index()->is_double_cpu(), "wrong index operand");
 #else
   assert(index()->is_illegal() || index()->is_double_cpu() || index()->is_single_cpu(), "wrong index operand");
@@ -162,12 +162,6 @@ void LIR_Address::verify0() const {
   assert(base()->type() == T_OBJECT || base()->type() == T_INT || base()->type() == T_METADATA,
          "wrong type for addresses");
 #endif
-#ifdef RISCV64
-  assert(base()->is_cpu_register(), "wrong base operand");
-  assert(index()->is_illegal() || index()->is_double_cpu() || index()->is_single_cpu(), "wrong index operand");
-  assert(base()->type() == T_OBJECT || base()->type() == T_LONG || base()->type() == T_METADATA,
-         "wrong type for addresses");
-#endif 
 }
 #endif
 
