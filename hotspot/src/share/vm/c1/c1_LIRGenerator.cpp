@@ -2474,8 +2474,8 @@ void LIRGenerator::do_UnsafeGetObject(UnsafeGetObject* x) {
         // if (source == null) -> continue
         __ cmp(lir_cond_equal, src_reg, LIR_OprFact::oopConst(NULL));
         //__ branch(lir_cond_equal, T_OBJECT, Lcont->label());
-        __ branch(lir_cond_equal, NO_FLAGREG_ONLY_ARG(src_reg) NO_FLAGREG_ONLY_ARG(LIR_OprFact::intConst(NULL))
-                T_INT, Lcont->label());
+        __ branch(lir_cond_equal, NO_FLAGREG_ONLY_ARG(src_reg) NO_FLAGREG_ONLY_ARG(LIR_OprFact::oopConst(NULL))
+                T_OBJECT, Lcont->label());
       }
       LIR_Opr src_klass = new_register(T_METADATA);
       if (gen_type_check) {
