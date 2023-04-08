@@ -28,7 +28,7 @@
 #define CPU_RISCV64_VM_NATIVEINST_RISCV64_HPP
 
 #include "asm/assembler.hpp"
-#include "asm/assembler.inline.hpp"
+//#include "asm/assembler.inline.hpp"
 #include "runtime/icache.hpp"
 #include "memory/allocation.hpp"
 #include "runtime/os.hpp"
