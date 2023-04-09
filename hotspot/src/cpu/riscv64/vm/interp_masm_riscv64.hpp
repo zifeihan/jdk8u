@@ -248,12 +248,12 @@ class InterpreterMacroAssembler: public MacroAssembler {
   void record_klass_in_profile(Register receiver, Register mdp,
                                Register reg2, bool is_virtual_call);
   void record_klass_in_profile_helper(Register receiver, Register mdp,
-                                      Register reg2,
+                                      Register reg2,int start_row,
                                       Label& done, bool is_virtual_call);
-  void record_item_in_profile_helper(Register item, Register mdp,
-                                     Register reg2, int start_row, Label& done, int total_rows,
-                                     OffsetFunction item_offset_fn, OffsetFunction item_count_offset_fn,
-                                     int non_profiled_offset);
+  //void record_item_in_profile_helper(Register item, Register mdp,
+   //                                  Register reg2, int start_row, Label& done, int total_rows,
+     //                                OffsetFunction item_offset_fn, OffsetFunction item_count_offset_fn,
+       //                              int non_profiled_offset);
 
   void update_mdp_by_offset(Register mdp_in, int offset_of_offset);
   void update_mdp_by_offset(Register mdp_in, Register reg, int offset_of_disp);

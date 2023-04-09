@@ -490,7 +490,7 @@ void InterpreterMacroAssembler::jump_from_interpreted(Register method) {
     // JVMTI events, such as single-stepping, are implemented partly by avoiding running
     // compiled code in threads for which the event is enabled.  Check here for
     // interp_only_mode if these events CAN be enabled.
-    ld(t0, Address(xthread, JavaThread::interp_only_mode_offset()));
+    lw(t0, Address(xthread, JavaThread::interp_only_mode_offset()));
     beqz(t0, run_compiled_code);
     ld(t0, Address(method, Method::interpreter_entry_offset()));
     jr(t0);
@@ -1226,7 +1226,7 @@ void InterpreterMacroAssembler::profile_virtual_call(Register receiver,
 // function is recursive, to generate the required tree structured code.
 // It's the interpreter, so we are trading off code space for speed.
 // See below for example code.
-void InterpreterMacroAssembler::record_klass_in_profile_helper(
+/*void InterpreterMacroAssembler::record_klass_in_profile_helper(
                                 Register receiver, Register mdp,
                                 Register reg2,
                                 Label& done, bool is_virtual_call) {
@@ -1307,15 +1307,97 @@ void InterpreterMacroAssembler::record_item_in_profile_helper(
   // In the fall-through case, we found no matching item, but we
   // observed the item[start_row] is NULL.
   // Fill in the item field and increment the count.
-  int item_offset = in_bytes(item_offset_fn(start_row));
+ // int item_offset = in_bytes(item_offset_fn(start_row));
+  int item_offset = in_bytes(VirtualCallData::receiver_offset(start_row));
   set_mdp_data_at(mdp, item_offset, item);
-  int count_offset = in_bytes(item_count_offset_fn(start_row));
+  //int count_offset = in_bytes(item_count_offset_fn(start_row));
+  int count_offset = in_bytes(VirtualCallData::receiver_count_offset(start_row));
   mv(reg2, DataLayout::counter_increment);
   set_mdp_data_at(mdp, count_offset, reg2);
   if (start_row > 0) {
     j(done);
   }
 }
+*/
+void InterpreterMacroAssembler::record_klass_in_profile_helper(
+                                Register receiver, Register mdp,
+                                        Register reg2, int start_row,
+                                Label& done, bool is_virtual_call) {
+  if (TypeProfileWidth == 0) {
+    if (is_virtual_call) {
+      increment_mdp_data_at(mdp, in_bytes(CounterData::count_offset()));
+    }
+    return;
+
+  }
+
+  int last_row = VirtualCallData::row_limit() - 1;
+  assert(start_row <= last_row, "must be work left to do");
+  // Test this row for both the item and for null.
+  // Take any of three different outcomes:
+  //   1. found item => increment count and goto done
+  //   2. found null => keep looking for case 1, maybe allocate this cell
+  //   3. found something else => keep looking for cases 1 and 2
+  // Case 3 is handled by a recursive call.
+  for (int row = start_row; row <= last_row; row++) {
+    Label next_test;
+    bool test_for_null_also = (row == start_row);
+
+    // See if the item is item[n].
+    int recvr_offset = in_bytes(VirtualCallData::receiver_offset(row));
+    test_mdp_data_at(mdp, recvr_offset, receiver,
+                     (test_for_null_also ? reg2 : noreg),
+                     next_test);
+    // (Reg2 now contains the item from the CallData.)
+
+    // The item is item[n].  Increment count[n].
+    int count_offset = in_bytes(VirtualCallData::receiver_count_offset(row));
+    increment_mdp_data_at(mdp, count_offset);
+    j(done);
+    bind(next_test);
+
+    if (test_for_null_also) {
+      Label found_null;
+      // Failed the equality check on item[n]...  Test for null.
+      if (start_row == last_row) {
+        // The only thing left to do is handle the null case.
+        if (is_virtual_call) {
+          beqz(reg2, found_null);
+          // Item did not match any saved item and there is no empty row for it.
+          // Increment total counter to indicate polymorphic case.
+          increment_mdp_data_at(mdp, in_bytes(CounterData::count_offset()));
+          j(done);
+          bind(found_null);
+        } else {
+          bnez(reg2, done);
+        }
+        break;
+      }
+      // Since null is rare, make it be the branch-taken case.
+      beqz(reg2, found_null);
+
+      // Put all the "Case 3" tests here.
+      record_klass_in_profile_helper(receiver, mdp, reg2, start_row + 1, done, is_virtual_call);
+
+      // Found a null.  Keep searching for a matching item,
+      // but remember that this is an empty (unused) slot.
+      bind(found_null);
+    }
+  }
+
+  // In the fall-through case, we found no matching item, but we
+  // observed the item[start_row] is NULL.
+  // Fill in the item field and increment the count.
+  int recvr_offset = in_bytes(VirtualCallData::receiver_offset(start_row));
+  set_mdp_data_at(mdp, recvr_offset, receiver);
+  int count_offset = in_bytes(VirtualCallData::receiver_count_offset(start_row));
+  mv(reg2, DataLayout::counter_increment);
+  set_mdp_data_at(mdp, count_offset, reg2);
+  if (start_row > 0) {
+    j(done);
+  }
+}
+
 
 // Example state machine code for three profile rows:
 //   # main copy of decision tree, rooted at row[1]
@@ -1371,7 +1453,7 @@ void InterpreterMacroAssembler::record_klass_in_profile(Register receiver,
   assert(ProfileInterpreter, "must be profiling");
   Label done;
 
-  record_klass_in_profile_helper(receiver, mdp, reg2, done, is_virtual_call);
+  record_klass_in_profile_helper(receiver, mdp, reg2, 0, done, is_virtual_call);
 
   bind(done);
 }
