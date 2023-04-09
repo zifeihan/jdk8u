@@ -40,7 +40,7 @@ void LIR_Assembler::generic_arraycopy(Register src, Register src_pos, Register l
   // Save the arguments in case the generic arraycopy fails and we
   // have to fall back to the JNI stub
   arraycopy_store_args(src, src_pos, length, dst, dst_pos);
-
+   address C_entry = CAST_FROM_FN_PTR(address, Runtime1::arraycopy);
   address copyfunc_addr = StubRoutines::generic_arraycopy();
   assert(copyfunc_addr != NULL, "generic arraycopy stub required");
 
@@ -55,12 +55,17 @@ void LIR_Assembler::generic_arraycopy(Register src, Register src_pos, Register l
   assert_different_registers(c_rarg3, j_rarg4);
   __ mv(c_rarg3, j_rarg3);
   __ mv(c_rarg4, j_rarg4);
+    if (copyfunc_addr == NULL) { // Use C version if stub was not generated
+      __ mv(t0, RuntimeAddress(C_entry));
+      __ jalr(t0);
+    } else{
 #ifndef PRODUCT
   if (PrintC1Statistics) {
     __ add_memory_int32(ExternalAddress((address)&Runtime1::_generic_arraycopystub_cnt), 1);
   }
 #endif
   __ far_call(RuntimeAddress(copyfunc_addr));
+  }
   __ beqz(x10, *stub->continuation());
   // Reload values from the stack so they are where the stub
   // expects them.
@@ -94,14 +99,14 @@ void LIR_Assembler::arraycopy_simple_check(Register src, Register src_pos, Regis
   if (flags & LIR_OpArrayCopy::type_check) {
     if (!(flags & LIR_OpArrayCopy::LIR_OpArrayCopy::dst_objarray)) {
       __ load_klass(tmp, dst);
-      __ lw(t0, Address(tmp, in_bytes(Klass::layout_helper_offset())));
+      __ lwu(t0, Address(tmp, in_bytes(Klass::layout_helper_offset())));
       __ li(t1, Klass::_lh_neutral_value);
       __ bge(t0, t1, *stub->entry(), /* is_far */ true);
     }
 
     if (!(flags & LIR_OpArrayCopy::LIR_OpArrayCopy::src_objarray)) {
       __ load_klass(tmp, src);
-      __ lw(t0, Address(tmp, in_bytes(Klass::layout_helper_offset())));
+      __ lwu(t0, Address(tmp, in_bytes(Klass::layout_helper_offset())));
       __ li(t1, Klass::_lh_neutral_value);
       __ bge(t0, t1, *stub->entry(), /* is_far */ true);
     }
@@ -128,6 +133,7 @@ void LIR_Assembler::arraycopy_simple_check(Register src, Register src_pos, Regis
     __ lwu(t0, Address(dst, arrayOopDesc::length_offset_in_bytes()));
     __ bgtu(tmp, t0, *stub->entry(), /* is_far */ true);
   }
+  __ beqz(length, *stub->continuation());
 }
 
 void LIR_Assembler::arraycopy_checkcast(Register src, Register src_pos, Register length,
@@ -149,7 +155,7 @@ void LIR_Assembler::arraycopy_checkcast(Register src, Register src_pos, Register
     int lh_offset = in_bytes(Klass::layout_helper_offset());
     Address klass_lh_addr(tmp, lh_offset);
     jint objArray_lh = Klass::array_layout_helper(T_OBJECT);
-    __ lw(t0, klass_lh_addr);
+    __ lwu(t0, klass_lh_addr);
     __ mvw(t1, objArray_lh);
     __ xorr(t0, t0, t1);
     __ bnez(t0, *stub->entry(), /* is_far */ true);
