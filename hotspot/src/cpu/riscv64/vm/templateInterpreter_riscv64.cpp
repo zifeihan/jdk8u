@@ -1603,9 +1603,9 @@ address InterpreterGenerator::generate_native_entry(bool synchronized) {
     __ pop(ltos);
    // __ resolve_jobject(x10, xthread, t);
     __ beqz(x10, store_result);   // Use NULL as-is.
-    STATIC_ASSERT(JNIHandles::weak_tag_mask == 1u);
+    //STATIC_ASSERT(JNIHandles::weak_tag_mask == 1u);
     //__ tbz(r0, 0, not_weak);    // Test for jweak tag.
-    __ andi(t0,x10,0);
+    __ andi(t0,x10,JNIHandles::weak_tag_mask);
     __ beqz(t0,not_weak);
     // Resolve jweak.
    // __ ld(x10, Address(x10, -JNIHandles::weak_tag_value));

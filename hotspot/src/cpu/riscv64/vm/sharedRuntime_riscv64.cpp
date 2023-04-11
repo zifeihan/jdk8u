@@ -1892,9 +1892,9 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
     //__ resolve_jobject(x10, xthread, t1);
   Label done, not_weak;
     __ beqz(x10, done);           // Use NULL as-is.
-    STATIC_ASSERT(JNIHandles::weak_tag_mask == 1u);
+   // STATIC_ASSERT(JNIHandles::weak_tag_mask == 1u);
     //__ tbz(x10, 0, not_weak);    // Test for jweak tag.
-    __ andi(t0, x10, 0);
+    __ andi(t0, x10, JNIHandles::weak_tag_mask);
     __ beqz(t0, not_weak);
    // Resolve jweak.
     //__ ld(x10, Address(x10, -JNIHandles::weak_tag_value));
@@ -2700,8 +2700,8 @@ SafepointBlob* SharedRuntime::generate_handler_blob(address call_ptr, int poll_t
     // Additionally, x18 is a callee-saved register so we can look at
     // it later to determine if someone changed the return address for
     // us!
-    __ ld(x18, Address(xthread, JavaThread::saved_exception_pc_offset()));
-    __ sd(x18, Address(fp, wordSize));
+    __ ld(c_rarg0, Address(xthread, JavaThread::saved_exception_pc_offset()));
+    __ sd(c_rarg0, Address(fp, wordSize));
   }
 
   // Do the call
