@@ -1042,7 +1042,7 @@ void gen_write_ref_array_post_barrier(Register start, Register end, Register scr
       __ lwu(temp, Address(temp, 0));
       __ decode_heap_oop(temp); // calls verify_oop
     }
-    __ add(t1, t1, size);
+    __ add(t1, t1, 1);
     __ j(loop);
     __ bind(end);
   }
