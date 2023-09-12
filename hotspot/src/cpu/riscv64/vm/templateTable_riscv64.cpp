@@ -2911,9 +2911,9 @@ void TemplateTable::getfield_or_static(int byte_no, bool is_static)
   //__ flw(f10, field);
   __ push(dtos);
   // Rewrite bytecode to be faster
-  /*if (rc == may_rewrite) {
+  if (!is_static) {
     patch_bytecode(Bytecodes::_fast_dgetfield, bc, x11);
-  }*/
+  }
 #ifdef ASSERT
   __ j(Done);
 
